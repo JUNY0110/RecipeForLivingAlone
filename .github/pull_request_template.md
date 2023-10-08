@@ -15,3 +15,6 @@
 
 ## ❓ 기타
 - 
+
+## 🚪 Close issue
+Close #No.
