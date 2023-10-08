@@ -2,16 +2,16 @@
 name: "✨ Feature"
 about: 기능관련 작업 내용
 title: "[Feature]"
-labels: ''
-assignees: ''
+labels: feature
+assignees: JUNY0110
 
 ---
 
-## Description
+## 📓 설명
 - 
 
-### Todo
+### 🏃 작업할 내용
 - [ ] 
 
-### Etc
+### ❓기타
 -
