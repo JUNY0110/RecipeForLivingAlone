@@ -44,13 +44,12 @@ final class NetworkManager {
     
     private func fetchRecipeData() {
         let recipeURL = "https://www.10000recipe.com/recipe/"
-        guard let url = URL(string: "\(recipeURL)7010582") else { return }
+        guard let url = URL(string: "\(recipeURL)7010580") else { return }
         let urlSession = URLSession(configuration: .default)
         
         urlSession.dataTask(with: url) { _, response, error in
             do {
-                let html = try String(contentsOf: url, encoding: .utf8)
-                guard error == nil else { return debugPrint(error!) }
+                guard error == nil else { return debugPrint(NetworkError.urlError) }
                 guard let response = response as? HTTPURLResponse else { return assertionFailure("응답 실패") }
                 let statusCode = response.statusCode
                 
@@ -58,6 +57,7 @@ final class NetworkManager {
                     return try self.errorMessage(statusCode)
                 }
                 
+                let html = try String(contentsOf: url, encoding: .utf8)
                 let doc: Document = try SwiftSoup.parse(html)
                 
                 try self.parsedData(for: doc)
@@ -152,6 +152,7 @@ extension NetworkManager {
         case redirectionError
         case clientError
         case serverError
+        case urlError
         case unknownError
         
         var debugDescription: String {
@@ -160,6 +161,7 @@ extension NetworkManager {
             case .redirectionError: "리다이렉션 에러"
             case .clientError: "클라이언트 에러"
             case .serverError: "서버 에러"
+            case .urlError: "URL 에러"
             case .unknownError: "알수없는 오류"
             }
         }
