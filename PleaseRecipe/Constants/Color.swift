@@ -8,5 +8,5 @@
 import UIKit
 
 enum Color {
-    static let mainColor = UIColor(hexCode: "FF9494")
+    static let mainColor = UIColor(named: "mainColor")
 }
