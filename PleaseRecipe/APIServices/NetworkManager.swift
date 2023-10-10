@@ -9,47 +9,43 @@ import Foundation
 import SwiftSoup
 
 final class NetworkManager {
-    
+
     // MARK: - Properties
     
-    private var ingredientDictionary = [String: String]() {
+    private var foodData: Food?
+    private(set) var foodDatum = [Food]() {
         didSet {
-            onCompleted(ingredientDictionary)
+            onCompleted(foodDatum)
         }
     }
-    private var onCompleted: ([String: String]) -> () = { _ in }
     
-    var ingredientResult: [String: String] {
-        return ingredientDictionary
-    }
+    var onCompleted: ([Food]) -> () = { _ in }
     
-    private var titleImageAttribute = ""
-    private var title: String = ""
-    private var summary: String = ""
-    private var numberOfPerson: String = ""
-    private var cookingTime: String = ""
-    private var difficultyLevel: String = ""
-    private var youtubeLink: String = ""
+    private var difficultyLevel = ""
     private var ingredientHTMLs: [Element]?
     private var recipes: [Element]?
-    private var cookingOrders = [String]()
     
     // MARK: - Init
     
     init() {
-        fetchRecipeData()
+        makeFoodDatum()
     }
     
     // MARK: - Methods
     
-    private func fetchRecipeData() {
-        let recipeURL = "https://www.10000recipe.com/recipe/"
-        guard let url = URL(string: "\(recipeURL)7010580") else { return }
+    private func makeFoodDatum() {
+        for mainURL in APIEnvironment.mainURLs {
+            makeFoodData(APIEnvironment.baseURL + mainURL)
+        }
+    }
+    
+    private func makeFoodData(_ recipeURL: String) {
+        guard let url = URL(string: recipeURL) else { return debugPrint(NetworkError.urlError) }
         let urlSession = URLSession(configuration: .default)
         
         urlSession.dataTask(with: url) { _, response, error in
             do {
-                guard error == nil else { return debugPrint(NetworkError.urlError) }
+                guard error == nil else { return debugPrint(error!) }
                 guard let response = response as? HTTPURLResponse else { return assertionFailure("응답 실패") }
                 let statusCode = response.statusCode
                 
@@ -63,6 +59,9 @@ final class NetworkManager {
                 try self.parsedData(for: doc)
                 try self.makeIngredientDictionay(with: self.ingredientHTMLs)
                 try self.makeCookingOrders(for: self.recipes)
+                
+                guard let foodData = self.foodData else { return }
+                self.foodDatum.append(foodData)
             } catch {
                 debugPrint(error)
             }
@@ -83,20 +82,22 @@ final class NetworkManager {
         let youtubeLink = try doc.select("div.iframe_wrap")
         
         // 사용가능 타입 데이터
-        let titleImageAttribute = try titleImage.select("img").attr("src")
+        let titleImageURL = try titleImage.select("img").attr("src")
         let summaryText = try summary.text()
         let numberOfPersonText = try numberOfPerson.text()
         let cookingTimeText = try cookingTime.text()
         let difficultyLevelText = try difficultyLevel.text()
-        let youtubeLinkText = try youtubeLink.select("iframe").attr("org_src")
+        let youtubeURL = try youtubeLink.select("iframe").attr("org_src")
         
-        self.titleImageAttribute = titleImageAttribute
-        self.title = title
-        self.summary = summaryText
-        self.numberOfPerson = numberOfPersonText
-        self.cookingTime = cookingTimeText
+        
+        foodData = .init(titleImageURL: titleImageURL,
+                         title: title,
+                         summary: summaryText,
+                         numberOfPerson: numberOfPersonText,
+                         cookingTime: cookingTimeText,
+                         youtubeURL: youtubeURL)
+        
         self.difficultyLevel = difficultyLevelText
-        self.youtubeLink = youtubeLinkText
         self.ingredientHTMLs = ingredientHTMLs
         self.recipes = recipes
     }
@@ -112,7 +113,7 @@ final class NetworkManager {
                 let ingredient = try info.select("a[href]").text().replacingOccurrences(of: " 구매", with: "")
                 let capacity = try info.select("span.ingre_unit").text()
                 
-                self.ingredientDictionary[ingredient] = capacity
+                foodData?.ingredientDictionary[ingredient] = capacity
             }
         }
     }
@@ -131,7 +132,7 @@ final class NetworkManager {
                 temp.append(cookingOrder)
             }
         }
-        cookingOrders = temp
+        foodData?.cookingOrders = temp
     }
     
     private func errorMessage(_ statusCode: Int) throws {
@@ -144,9 +145,12 @@ final class NetworkManager {
     }
 }
 
-// MARK: - Nested Types(Errors)
+// MARK: - Nested Types
 
 extension NetworkManager {
+    
+    // MARK: Error
+    
     enum NetworkError: Error, CustomDebugStringConvertible {
         case succeess
         case redirectionError
