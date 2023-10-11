@@ -16,13 +16,14 @@ final class FoodListViewController: UIViewController {
     private let networkManager = NetworkManager()
     private var foodDatum = [Food]() {
         didSet {
-            // TODO: - 데이터 리로드
+            applySnapshot()
         }
     }
     private var dataSource: UITableViewDiffableDataSource<Section, Item>!
     
     // MARK: - Views
     
+    private let searchController = UISearchController(searchResultsController: SearchResultViewController())
     private lazy var tableView: UITableView = {
         $0.dataSource = dataSource
         $0.register(FoodListCell.self, forCellReuseIdentifier: FoodListCell.identifier)
@@ -36,6 +37,7 @@ final class FoodListViewController: UIViewController {
         view.backgroundColor = .white
         
         fetchFoodDatum()
+        configureNavigationBar()
         configureTableView()
         
         layout()
@@ -50,6 +52,21 @@ final class FoodListViewController: UIViewController {
         }
     }
     
+    // MARK: - Configure
+    
+    private func configureNavigationBar() {
+        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "찜목록", style: .plain, target: self, action: nil)
+        navigationItem.title = "요리 레시피"
+        
+        configureSearchBar()
+    }
+    
+    private func configureSearchBar() {
+        navigationItem.hidesSearchBarWhenScrolling = false
+        navigationItem.searchController?.automaticallyShowsCancelButton = false
+        navigationItem.searchController?.obscuresBackgroundDuringPresentation = true
+        navigationItem.searchController = searchController
+        searchController.searchResultsUpdater = self
     }
     
     // MARK: - Methods
@@ -86,6 +103,15 @@ extension FoodListViewController {
         }
         
         dataSource.apply(snapshot)
+    }
+}
+
+// MARK: - UISearchResultsUpdating
+
+extension FoodListViewController: UISearchResultsUpdating {
+    func updateSearchResults(for searchController: UISearchController) {
+        guard let text = searchController.searchBar.text else { return }
+        print(text)
     }
 }
 
