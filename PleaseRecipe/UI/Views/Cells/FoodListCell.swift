@@ -85,8 +85,9 @@ final class FoodListCell: UITableViewCell {
     
     // MARK: - Configure
     
-    func configureCell(_ foodImageName: String, _ foodName: String, _ foodDescription: String) {
-        loadImage(foodImageName)
+    func configureCell(cellViewModelInit networkManager: NetworkManager, _ foodImageName: String?, _ foodName: String, _ foodDescription: String) {
+        self.viewModel = .init(networkManager: networkManager)
+        self.imageURL = foodImageName
         self.foodNameLabel.text = foodName
         self.foodDescriptionLabel.text = foodDescription
     }

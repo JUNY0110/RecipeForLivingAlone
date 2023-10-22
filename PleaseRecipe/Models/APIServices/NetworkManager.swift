@@ -79,7 +79,7 @@ final class NetworkManager: NetworkType {
     
     private func parsedData(for doc: Document) throws {
         // html 데이터
-        let titleImage = try doc.select("div.centeredcrop")
+        let foodImage = try doc.select("div.centeredcrop")
         let title = try doc.title()
         let summary = try doc.select("div.view2_summary_in")
         
@@ -90,14 +90,14 @@ final class NetworkManager: NetworkType {
         let youtubeLink = try doc.select("div.iframe_wrap")
         
         // 사용가능 타입 데이터
-        let titleImageURL = try titleImage.select("img").attr("src")
+        let foodImageURL = try foodImage.select("img").attr("src")
         let summaryText = try summary.text()
         let numberOfPersonText = try numberOfPerson.text()
         let cookingTimeText = try cookingTime.text()
         let youtubeURL = try youtubeLink.select("iframe").attr("org_src")
         
         
-        foodData = .init(titleImageURL: titleImageURL,
+        foodData = .init(foodImageURL: foodImageURL,
                          title: title,
                          summary: summaryText,
                          numberOfPerson: numberOfPersonText,
