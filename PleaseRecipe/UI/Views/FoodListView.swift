@@ -25,6 +25,7 @@ final class FoodListView: UITableView {
     override init(frame: CGRect, style: UITableView.Style) {
         super.init(frame: frame, style: style)
         
+        delegate = self
         setupDataSource()
     }
     
@@ -63,5 +64,13 @@ final class FoodListView: UITableView {
         }
         
         diffableDataSource.apply(snapshot)
+    }
+}
+
+// MARK: - UITableViewDelegate
+
+extension FoodListView: UITableViewDelegate {
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return 120
     }
 }
