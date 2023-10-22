@@ -8,7 +8,7 @@
 import Foundation
 
 struct Food {
-    let titleImageURL: String
+    let foodImageURL: String
     let title: String
     let summary: String
     let numberOfPerson: String

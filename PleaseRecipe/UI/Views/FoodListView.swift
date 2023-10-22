@@ -12,6 +12,7 @@ final class FoodListView: UITableView {
     // MARK: - Properties
     
     private var diffableDataSource: UITableViewDiffableDataSource<Section, Item>!
+    var viewModel: FoodListViewModel!
     var foodDatum = [Food]() {
         didSet {
             applySnapshot()
@@ -39,9 +40,11 @@ final class FoodListView: UITableView {
             
             let cell = tableView.dequeueReusableCell(withIdentifier: FoodListCell.identifier, for: indexPath) as! FoodListCell
             
-            cell.configureCell(itemIdentifier.foodImage,
+            cell.configureCell(cellViewModelInit: self.viewModel.networkManager,
+                               itemIdentifier.foodImageURL,
                                itemIdentifier.foodName,
                                itemIdentifier.foodDescription)
+            
             return cell
         })
         
@@ -54,7 +57,7 @@ final class FoodListView: UITableView {
         snapshot.appendSections([.food])
         
         for foodData in foodDatum {
-            snapshot.appendItems([Item(foodImage: foodData.titleImageURL,
+            snapshot.appendItems([Item(foodImageURL: foodData.foodImageURL,
                                        foodName: foodData.title,
                                        foodDescription: foodData.summary)])
         }

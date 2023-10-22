@@ -5,55 +5,45 @@
 //  Created by 지준용 on 2023/10/08.
 //
 
-import Foundation
+import UIKit
 
 import SwiftSoup
 
-final class NetworkManager {
+protocol NetworkType {
+    func makeFoodData(urlString: String, completion: @escaping (Result<Food, NetworkError>) -> ())
+    func loadImage(imageURL: String?, completion: @escaping (UIImage?) -> ())
+}
+
+final class NetworkManager: NetworkType {
 
     // MARK: - Properties
     
     private var foodData: Food?
-    private(set) var foodDatum = [Food]() {
-        didSet {
-            onCompleted(foodDatum)
-        }
-    }
-    
-    var onCompleted: ([Food]) -> () = { _ in }
-    
-    private var difficultyLevel = ""
     private var ingredientHTMLs: [Element]?
     private var recipes: [Element]?
-    
-    // MARK: - Init
-    
-    init() {
-        makeFoodDatum()
-    }
-    
+
     // MARK: - Methods
-    
-    private func makeFoodDatum() {
-        for mainURL in APIEnvironment.mainURLs {
-            makeFoodData(APIEnvironment.baseURL + mainURL)
-        }
-    }
-    
-    private func makeFoodData(_ recipeURL: String) {
-        guard let url = URL(string: recipeURL) else { return debugPrint(NetworkError.urlError) }
+
+    func makeFoodData(urlString: String, completion: @escaping (Result<Food, NetworkError>) -> ()) {
+        guard let url = URL(string: urlString) else { return completion(.failure(NetworkError.urlError)) }
         let urlSession = URLSession(configuration: .default)
         
         urlSession.dataTask(with: url) { _, response, error in
+            guard error == nil else {
+                return completion(.failure(NetworkError.networkingError))
+            }
+            
+            guard let response = response as? HTTPURLResponse else {
+                return completion(.failure(NetworkError.responseError))
+            }
+            
+            let statusCode = response.statusCode
+            
+            guard (200..<299) ~= statusCode else {
+                return completion(.failure(self.statusError(statusCode)))
+            }
+            
             do {
-                guard error == nil else { return debugPrint(error!) }
-                guard let response = response as? HTTPURLResponse else { return assertionFailure("응답 실패") }
-                let statusCode = response.statusCode
-                
-                guard (200..<299) ~= response.statusCode else {
-                    return try self.errorMessage(statusCode)
-                }
-                
                 let html = try String(contentsOf: url, encoding: .utf8)
                 let doc: Document = try SwiftSoup.parse(html)
                 
@@ -62,43 +52,58 @@ final class NetworkManager {
                 try self.makeCookingOrders(for: self.recipes)
                 
                 guard let foodData = self.foodData else { return }
-                self.foodDatum.append(foodData)
+                completion(.success(foodData))
             } catch {
-                debugPrint(error)
+                completion(.failure(NetworkError.parsingError))
             }
         }.resume()
     }
     
+    func loadImage(imageURL: String?, completion: @escaping (UIImage?) -> ()) {
+        guard let urlString = imageURL,
+              let url = URL(string: urlString) else { return }
+        
+        DispatchQueue.global().async {
+            do {
+                let data = try Data(contentsOf: url)
+                guard urlString == url.absoluteString else { return }
+                
+                DispatchQueue.main.async {
+                    completion(UIImage(data: data))
+                }
+            } catch {
+                debugPrint(error)
+            }
+        }
+    }
+    
     private func parsedData(for doc: Document) throws {
         // html 데이터
-        let titleImage = try doc.select("div.centeredcrop")
+        let foodImage = try doc.select("div.centeredcrop")
         let title = try doc.title()
         let summary = try doc.select("div.view2_summary_in")
         
         let numberOfPerson = try doc.select("span.view2_summary_info1")
         let cookingTime = try doc.select("span.view2_summary_info2")
-        let difficultyLevel = try doc.select("span.view2_summary_info3")
         let ingredientHTMLs = try doc.getElementById("divConfirmedMaterialArea")?.select("div.ready_ingre3").array()
         let recipes = try doc.select("div.view_step").array()
         let youtubeLink = try doc.select("div.iframe_wrap")
         
         // 사용가능 타입 데이터
-        let titleImageURL = try titleImage.select("img").attr("src")
+        let foodImageURL = try foodImage.select("img").attr("src")
         let summaryText = try summary.text()
         let numberOfPersonText = try numberOfPerson.text()
         let cookingTimeText = try cookingTime.text()
-        let difficultyLevelText = try difficultyLevel.text()
         let youtubeURL = try youtubeLink.select("iframe").attr("org_src")
         
         
-        foodData = .init(titleImageURL: titleImageURL,
+        foodData = .init(foodImageURL: foodImageURL,
                          title: title,
                          summary: summaryText,
                          numberOfPerson: numberOfPersonText,
                          cookingTime: cookingTimeText,
                          youtubeURL: youtubeURL)
         
-        self.difficultyLevel = difficultyLevelText
         self.ingredientHTMLs = ingredientHTMLs
         self.recipes = recipes
     }
@@ -135,66 +140,17 @@ final class NetworkManager {
         }
         foodData?.cookingOrders = temp
     }
-    
-    private func errorMessage(_ statusCode: Int) throws {
+
+    private func statusError(_ statusCode: Int) -> NetworkError {
         switch statusCode {
-        case 300..<399: debugPrint(NetworkError.redirectionError)
-        case 400..<499: debugPrint(NetworkError.clientError)
-        case 500..<599: debugPrint(NetworkError.serverError)
-        default: debugPrint(NetworkError.unknownError)
-        }
-    }
-}
-
-// MARK: - Nested Types
-
-extension NetworkManager {
-    
-    // MARK: Error
-    
-    enum NetworkError: Error, CustomDebugStringConvertible {
-        case succeess
-        case redirectionError
-        case clientError
-        case serverError
-        case urlError
-        case unknownError
-        
-        var debugDescription: String {
-            switch self {
-            case .succeess: "네트워크 연결 성공"
-            case .redirectionError: "리다이렉션 에러"
-            case .clientError: "클라이언트 에러"
-            case .serverError: "서버 에러"
-            case .urlError: "URL 에러"
-            case .unknownError: "알수없는 오류"
-            }
-        }
-    }
-
-    enum ParsingError: Error, CustomDebugStringConvertible {
-        case titleImageError
-        case titleError
-        case summaryError
-        case numberOfPersonError
-        case cookingTimeError
-        case difficultyLevelError
-        case ingredientHTMLsError
-        case recipesError
-        case youtubeLinkError
-        
-        var debugDescription: String {
-            switch self {
-            case .titleImageError: "타이틀 이미지 파싱 에러"
-            case .titleError: "요리 이름 파싱 에러"
-            case .summaryError: "요리 요약설명 파싱 에러"
-            case .numberOfPersonError: "기준 인원수 파싱 에러"
-            case .cookingTimeError: "조리 시간 파싱 에러"
-            case .difficultyLevelError: "난이도 파싱 에러"
-            case .ingredientHTMLsError: "재료 파싱 에러"
-            case .recipesError: "조리법 파싱 에러"
-            case .youtubeLinkError: "유튜브 링크 파싱 에러"
-            }
+        case 300..<399:
+            return NetworkError.redirectionError
+        case 400..<499: 
+            return NetworkError.clientError
+        case 500..<599: 
+            return NetworkError.serverError
+        default: 
+            return NetworkError.unknownError
         }
     }
 }

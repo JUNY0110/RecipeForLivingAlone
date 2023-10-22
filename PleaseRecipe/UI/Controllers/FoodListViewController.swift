@@ -13,7 +13,6 @@ final class FoodListViewController: UIViewController {
 
     // MARK: - Properties
     
-    private let networkManager = NetworkManager()
     private var foodDatum = [Food]() {
         didSet {
             foodListView.foodDatum = foodDatum
@@ -43,8 +42,13 @@ final class FoodListViewController: UIViewController {
     // MARK: - Methods
     
     private func fetchFoodDatum() {
-        networkManager.onCompleted = { _ in
-            self.foodDatum = self.networkManager.foodDatum
+        let networkManager = NetworkManager()
+        let viewModel = FoodListViewModel(networkManager: networkManager)
+        
+        foodListView.viewModel = viewModel
+        
+        viewModel.onCompletedData = { [weak self] datum in
+            self?.foodListView.foodDatum = datum
         }
     }
 }

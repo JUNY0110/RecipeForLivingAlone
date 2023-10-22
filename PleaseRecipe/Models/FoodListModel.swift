@@ -13,7 +13,7 @@ extension FoodListView {
     }
     
     struct Item: Hashable {
-        let foodImage: String
+        let foodImageURL: String
         let foodName: String
         let foodDescription: String
     }

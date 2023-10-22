@@ -14,7 +14,15 @@ final class FoodListCell: UITableViewCell {
     // MARK: - Properties
     
     static let identifier = "foodListCell"
-
+    private var imageURL: String? {
+        didSet {
+            viewModel.imageURL = imageURL
+            loadImage()
+        }
+    }
+    
+    var viewModel: FoodListCellViewModel!
+    
     // MARK: - Views
     
     private let foodImageView: UIImageView = {
@@ -62,17 +70,27 @@ final class FoodListCell: UITableViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
+    // MARK: - LifeCycle
+    
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        
+        self.foodImageView.image = nil
+        self.foodNameLabel.text = ""
+        self.foodDescriptionLabel.text = ""
+    }
+    
     // MARK: - Layout
     
     private func layout() {
-        addSubview(foodImageView)
+        contentView.addSubview(foodImageView)
         foodImageView.snp.makeConstraints {
             $0.verticalEdges.equalToSuperview().inset(20)
             $0.left.equalToSuperview().offset(16)
             $0.size.equalTo(80)
         }
         
-        addSubview(vStackView)
+        contentView.addSubview(vStackView)
         vStackView.addArrangedSubview(foodNameLabel)
         vStackView.addArrangedSubview(foodDescriptionLabel)
         
@@ -85,37 +103,20 @@ final class FoodListCell: UITableViewCell {
     
     // MARK: - Configure
     
-    func configureCell(_ foodImageName: String, _ foodName: String, _ foodDescription: String) {
-        loadImage(foodImageName)
+    func configureCell(cellViewModelInit networkManager: NetworkManager, _ foodImageName: String?, _ foodName: String, _ foodDescription: String) {
+        self.viewModel = .init(networkManager: networkManager)
+        self.imageURL = foodImageName
         self.foodNameLabel.text = foodName
         self.foodDescriptionLabel.text = foodDescription
     }
     
     // MARK: - Methods
     
-    override func prepareForReuse() {
-        super.prepareForReuse()
-        
-        self.foodImageView.image = nil
-        self.foodNameLabel.text = ""
-        self.foodDescriptionLabel.text = ""
-    }
-    
-    private func loadImage(_ imageURL: String?) {
-        guard let urlString = imageURL,
-              let url = URL(string: urlString) else { return }
-        
-        DispatchQueue.global().async {
-            do {
-                let data = try Data(contentsOf: url)
-                guard urlString == url.absoluteString else { return }
-                
-                DispatchQueue.main.async {
-                    self.foodImageView.image = UIImage(data: data)
-                }
-            } catch {
-                print(error)
-            }
+    private func loadImage() {
+        viewModel.onCompleted = { [weak self] image in
+            guard let weakSelf = self else { return }
+            
+            weakSelf.foodImageView.image = image
         }
     }
 }
