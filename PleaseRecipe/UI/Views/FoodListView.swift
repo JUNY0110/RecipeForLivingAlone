@@ -12,6 +12,7 @@ final class FoodListView: UITableView {
     // MARK: - Properties
     
     private var diffableDataSource: UITableViewDiffableDataSource<Section, Item>!
+    var viewModel: FoodListViewModel!
     var foodDatum = [Food]() {
         didSet {
             applySnapshot()
@@ -43,6 +44,7 @@ final class FoodListView: UITableView {
                                itemIdentifier.foodImageURL,
                                itemIdentifier.foodName,
                                itemIdentifier.foodDescription)
+            
             return cell
         })
         
