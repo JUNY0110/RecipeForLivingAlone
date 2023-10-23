@@ -7,10 +7,14 @@
 
 import UIKit
 
+protocol FoodListViewDelegate: AnyObject {
+    func moveToRecipeViewController(_ data: FoodListView.Item)
+}
+
 final class FoodListView: UITableView {
 
     // MARK: - Properties
-    
+    weak var viewDelegate: FoodListViewDelegate?
     private var diffableDataSource: UITableViewDiffableDataSource<Section, Item>!
     var viewModel: FoodListViewModel!
     var foodDatum = [Food]() {
@@ -72,5 +76,12 @@ final class FoodListView: UITableView {
 extension FoodListView: UITableViewDelegate {
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 120
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let snapshot = diffableDataSource.snapshot()
+        let itemIdentifier = snapshot.itemIdentifiers[indexPath.row]
+        
+        viewDelegate?.moveToRecipeViewController(itemIdentifier)
     }
 }

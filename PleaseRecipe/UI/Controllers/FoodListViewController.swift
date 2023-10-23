@@ -9,7 +9,7 @@ import UIKit
 
 import SnapKit
 
-final class FoodListViewController: UIViewController {
+final class FoodListViewController: UIViewController, FoodListViewDelegate {
 
     // MARK: - Properties
     
@@ -35,6 +35,7 @@ final class FoodListViewController: UIViewController {
         view.backgroundColor = .white
         
         configureNavigationBar()
+        foodListView.viewDelegate = self
         configureSearchBar()
         fetchFoodDatum()
     }
@@ -50,6 +51,13 @@ final class FoodListViewController: UIViewController {
         viewModel.onCompletedData = { [weak self] datum in
             self?.foodListView.foodDatum = datum
         }
+    }
+    
+    func moveToRecipeViewController(_ data: FoodListView.Item) {
+        let recipeViewController = RecipeViewController()
+        recipeViewController.foodData = data
+        
+        self.navigationController?.pushViewController(recipeViewController, animated: true)
     }
 }
 
