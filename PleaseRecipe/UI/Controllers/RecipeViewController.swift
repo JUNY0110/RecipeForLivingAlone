@@ -45,6 +45,7 @@ final class RecipeViewController: UIViewController {
         super.viewDidLoad()
 
         view.backgroundColor = .white
+        tabBarController?.tabBar.isHidden = true
     }
     override func viewIsAppearing(_ animated: Bool) {
         super.viewIsAppearing(animated)
