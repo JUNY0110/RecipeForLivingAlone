@@ -43,6 +43,7 @@ final class FoodListViewController: UIViewController, FoodListViewDelegate {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
+        foodListView.reloadData()
         
         configureNavigationBarColor()
         appearTabBar()
