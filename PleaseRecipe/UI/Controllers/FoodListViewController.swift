@@ -40,6 +40,13 @@ final class FoodListViewController: UIViewController, FoodListViewDelegate {
         fetchFoodDatum()
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        
+        configureNavigationBarColor()
+    }
+    
     // MARK: - Methods
     
     private func fetchFoodDatum() {
@@ -70,6 +77,14 @@ extension FoodListViewController {
         let rightBarButtonItem = UIBarButtonItem(title: "찜목록", style: .plain, target: self, action: nil)
         navigationItem.rightBarButtonItem = rightBarButtonItem
         navigationItem.title = "요리 레시피"
+    }
+    
+    private func configureNavigationBarColor() {
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = .systemBackground
+        navigationController?.navigationBar.standardAppearance = appearance
+        navigationController?.navigationBar.tintColor = .systemBlue
     }
     
     private func configureSearchBar() {
