@@ -52,6 +52,7 @@ final class RecipeViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        scrollView.delegate = self
         view.backgroundColor = .white
         tabBarController?.tabBar.isHidden = true
     }
@@ -103,4 +104,28 @@ final class RecipeViewController: UIViewController {
         Metric.stickyHeaderHeightMaxWithoutStatusBar = Metric.stickyHeaderHeightMax - Metric.statusBarHeight - 60
     }
 }
+
+// MARK: - UIScrollViewDelegate
+
+extension RecipeViewController: UIScrollViewDelegate {
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        let remainingTopSpacing = scrollView.contentOffset.y
+        
+        configureNavigationAppearance(with: remainingTopSpacing)
+    }
+    
+    private func configureNavigationAppearance(with remainingTopSpacing: CGFloat) {
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        
+        if remainingTopSpacing >= Metric.stickyHeaderHeightMaxWithoutStatusBar {
+            appearance.backgroundColor = .systemBackground
+            navigationController?.navigationBar.tintColor = .black
+        } else {
+            appearance.backgroundColor = .clear
+            navigationController?.navigationBar.tintColor = .systemBackground
+        }
+        
+        navigationController?.navigationBar.standardAppearance = appearance
+    }
 }
