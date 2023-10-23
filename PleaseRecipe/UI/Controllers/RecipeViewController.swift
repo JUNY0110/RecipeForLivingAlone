@@ -15,6 +15,14 @@ final class RecipeViewController: UIViewController {
     
     var foodData: FoodListView.Item!
     
+    // MARK: - Enum
+    
+    private enum Metric {
+        static var statusBarHeight: CGFloat!
+        static var stickyHeaderHeightMax: CGFloat!
+        static var stickyHeaderHeightMaxWithoutStatusBar: CGFloat!
+    }
+    
     // MARK: - Views
     
     let scrollView: UIScrollView = {
@@ -47,9 +55,11 @@ final class RecipeViewController: UIViewController {
         view.backgroundColor = .white
         tabBarController?.tabBar.isHidden = true
     }
+    
     override func viewIsAppearing(_ animated: Bool) {
         super.viewIsAppearing(animated)
         
+        setupMetric()
         layout()
     }
     
@@ -81,4 +91,16 @@ final class RecipeViewController: UIViewController {
             $0.edges.equalToSuperview()
         }
     }
+    
+    private func setupMetric() {
+        guard let statusBarHeight = view.window?.windowScene?.statusBarManager?.statusBarFrame.height,
+              let stickyHeaderHeightMax = view.window?.windowScene?.screen.bounds.height else {
+            return
+        }
+        
+        Metric.statusBarHeight = statusBarHeight + 6
+        Metric.stickyHeaderHeightMax = stickyHeaderHeightMax / 3
+        Metric.stickyHeaderHeightMaxWithoutStatusBar = Metric.stickyHeaderHeightMax - Metric.statusBarHeight - 60
+    }
+}
 }
