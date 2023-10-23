@@ -34,8 +34,8 @@ final class FoodListViewController: UIViewController, FoodListViewDelegate {
         super.viewDidLoad()
         view.backgroundColor = .white
         
-        configureNavigationBar()
         foodListView.viewDelegate = self
+        configureNavigationBarItems()
         configureSearchBar()
         fetchFoodDatum()
     }
@@ -64,8 +64,11 @@ final class FoodListViewController: UIViewController, FoodListViewDelegate {
 // MARK: - NavigationUI
 
 extension FoodListViewController {
-    private func configureNavigationBar() {
-        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "찜목록", style: .plain, target: self, action: nil)
+    private func configureNavigationBarItems() {
+        let backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
+        navigationItem.backBarButtonItem = backBarButtonItem
+        let rightBarButtonItem = UIBarButtonItem(title: "찜목록", style: .plain, target: self, action: nil)
+        navigationItem.rightBarButtonItem = rightBarButtonItem
         navigationItem.title = "요리 레시피"
     }
     
