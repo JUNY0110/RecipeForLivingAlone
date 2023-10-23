@@ -45,6 +45,7 @@ final class FoodListViewController: UIViewController, FoodListViewDelegate {
         
         
         configureNavigationBarColor()
+        appearTabBar()
     }
     
     // MARK: - Methods
@@ -65,6 +66,10 @@ final class FoodListViewController: UIViewController, FoodListViewDelegate {
         recipeViewController.foodData = data
         
         self.navigationController?.pushViewController(recipeViewController, animated: true)
+    }
+    
+    private func appearTabBar() {
+        tabBarController?.tabBar.isHidden = false
     }
 }
 
