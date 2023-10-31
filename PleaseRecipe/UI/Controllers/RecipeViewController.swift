@@ -9,7 +9,7 @@ import UIKit
 
 import SnapKit
 
-final class RecipeViewController: UIViewController {
+final class RecipeViewController: UIViewController, StretchyHeaderViewDelegate {
 
     // MARK: - Properties
     
@@ -20,7 +20,8 @@ final class RecipeViewController: UIViewController {
     
     private enum Metric {
         static var statusBarHeight: CGFloat!
-        static var stickyHeaderHeightMax: CGFloat!
+        static var stickyHeaderImageHeightMin: CGFloat!
+        static var stickyHeaderHeight: CGFloat!
         static var stickyHeaderHeightMaxWithoutStatusBar: CGFloat!
     }
     
@@ -36,6 +37,8 @@ final class RecipeViewController: UIViewController {
         $0.register(RecipeCell.self, forCellReuseIdentifier: RecipeCell.identifier)
         return $0
     }(UITableView(frame: .zero, style: .grouped))
+
+    private let stretchyHeaderView = StretchyHeaderView()
     
     // MARK: - LifeCycle
     
@@ -43,6 +46,8 @@ final class RecipeViewController: UIViewController {
         super.viewDidLoad()
         
         tabBarController?.tabBar.isHidden = true
+        stretchyHeaderView.delegate = self
+        configureStretchyHeader()
     }
     
     override func viewIsAppearing(_ animated: Bool) {
@@ -59,17 +64,37 @@ final class RecipeViewController: UIViewController {
         tableView.snp.makeConstraints {
             $0.edges.equalToSuperview()
         }
+        
+        tableView.tableHeaderView?.frame = CGRect(x: 0, y: 0, width: view.frame.size.width, height: Metric.stickyHeaderHeight)
     }
     
     private func setupMetric() {
         guard let statusBarHeight = view.window?.windowScene?.statusBarManager?.statusBarFrame.height,
-              let stickyHeaderHeightMax = view.window?.windowScene?.screen.bounds.height else {
+              let viewHeight = view.window?.windowScene?.screen.bounds.height else {
             return
         }
         
         Metric.statusBarHeight = statusBarHeight + 6
-        Metric.stickyHeaderHeightMax = stickyHeaderHeightMax / 3
-        Metric.stickyHeaderHeightMaxWithoutStatusBar = Metric.stickyHeaderHeightMax - Metric.statusBarHeight - 60
+        Metric.stickyHeaderImageHeightMin = viewHeight * 0.3 - 60
+        Metric.stickyHeaderHeight = viewHeight * 0.3 + 70
+        Metric.stickyHeaderHeightMaxWithoutStatusBar = Metric.stickyHeaderImageHeightMin - Metric.statusBarHeight - 40
+    }
+    
+    private func configureStretchyHeader() {
+        stretchyHeaderView.viewModel = self.viewModel
+        
+        if let titleEnum = FoodName(rawValue: foodData.title) {
+            let title = String(reflecting: titleEnum)
+            stretchyHeaderView.configureStretchyHeader(foodData.foodImageURL,
+                                                       title,
+                                                       foodData.title,
+                                                       foodData.numberOfPerson,
+                                                       foodData.cookingTime,
+                                                       foodData.youtubeURL)
+        }
+        tableView.tableHeaderView = stretchyHeaderView
+    }
+    
     }
 }
 
@@ -85,6 +110,8 @@ extension RecipeViewController: UITableViewDelegate {
     }
     
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        guard let header = tableView.tableHeaderView as? StretchyHeaderView else { return }
+        header.scrollViewDidScroll(scrollView: tableView, headerImageHeight: Metric.stickyHeaderImageHeightMin)
         
         let remainingTopSpacing = scrollView.contentOffset.y
         configureNavigationAppearance(with: remainingTopSpacing)
