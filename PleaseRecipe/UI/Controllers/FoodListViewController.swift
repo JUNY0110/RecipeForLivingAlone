@@ -13,6 +13,7 @@ final class FoodListViewController: UIViewController, FoodListViewDelegate {
 
     // MARK: - Properties
     
+    private let networkManager = NetworkManager()
     private var foodDatum = [Food]() {
         didSet {
             foodListView.foodDatum = foodDatum
@@ -21,7 +22,7 @@ final class FoodListViewController: UIViewController, FoodListViewDelegate {
     
     // MARK: - Views
     
-    private let searchController = UISearchController(searchResultsController: SearchResultViewController())
+    private let searchController = UISearchController()
     private let foodListView = FoodListView()
     
     // MARK: - LifeCycle
@@ -52,9 +53,7 @@ final class FoodListViewController: UIViewController, FoodListViewDelegate {
     // MARK: - Methods
     
     private func fetchFoodDatum() {
-        let networkManager = NetworkManager()
         let viewModel = FoodListViewModel(networkManager: networkManager)
-        
         foodListView.viewModel = viewModel
         
         viewModel.onCompletedData = { [weak self] datum in
@@ -98,15 +97,24 @@ extension FoodListViewController {
         navigationItem.searchController?.automaticallyShowsCancelButton = false
         navigationItem.searchController?.obscuresBackgroundDuringPresentation = true
         navigationItem.searchController = searchController
-        searchController.searchResultsUpdater = self
+        searchController.searchBar.delegate = self
     }
 }
 
 // MARK: - UISearchResultsUpdating
 
-extension FoodListViewController: UISearchResultsUpdating {
-    func updateSearchResults(for searchController: UISearchController) {
-        guard let text = searchController.searchBar.text else { return }
-        print(text)
+extension FoodListViewController: UISearchBarDelegate {
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        foodListView.applySnapshot(with: searchText)
+    }
+    
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        guard let text = searchBar.text, !text.replacingOccurrences(of: " ", with: "").isEmpty else { return }
+        view.endEditing(true)
+    }
+    
+    func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
+        foodListView.applySnapshot()
+        view.endEditing(true)
     }
 }
