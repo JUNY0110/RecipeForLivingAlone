@@ -61,7 +61,7 @@ final class FoodListViewController: UIViewController, FoodListViewDelegate {
         }
     }
     
-    func moveToRecipeViewController(_ data: FoodListView.Item) {
+    func moveToRecipeViewController(_ data: Food) {
         let recipeViewController = RecipeViewController()
         recipeViewController.foodData = data
         

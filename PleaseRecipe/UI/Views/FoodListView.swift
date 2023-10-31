@@ -8,14 +8,14 @@
 import UIKit
 
 protocol FoodListViewDelegate: AnyObject {
-    func moveToRecipeViewController(_ data: FoodListView.Item)
+    func moveToRecipeViewController(_ data: Food)
 }
 
 final class FoodListView: UITableView {
 
     // MARK: - Properties
     weak var viewDelegate: FoodListViewDelegate?
-    private var diffableDataSource: UITableViewDiffableDataSource<Section, Item>!
+    private var diffableDataSource: UITableViewDiffableDataSource<Section, Food>!
     var viewModel: FoodListViewModel!
     var foodDatum = [Food]() {
         didSet {
@@ -41,7 +41,7 @@ final class FoodListView: UITableView {
     // MARK: - SetupDataSource
     
     private func setupDataSource() {
-        self.diffableDataSource = UITableViewDiffableDataSource<Section, Item>(tableView: self, cellProvider: { tableView, indexPath, itemIdentifier in
+        self.diffableDataSource = UITableViewDiffableDataSource<Section, Food>(tableView: self, cellProvider: { tableView, indexPath, itemIdentifier in
             
             let cell = tableView.dequeueReusableCell(withIdentifier: FoodListCell.identifier, for: indexPath) as! FoodListCell
             
@@ -57,8 +57,8 @@ final class FoodListView: UITableView {
         register(FoodListCell.self, forCellReuseIdentifier: FoodListCell.identifier)
     }
     
-    private func applySnapshot() {
-        var snapshot = NSDiffableDataSourceSnapshot<Section, Item>()
+    func applySnapshot(with word: String = "") {
+        var snapshot = NSDiffableDataSourceSnapshot<Section, Food>()
         snapshot.appendSections([.food])
         
         for foodData in foodDatum {
