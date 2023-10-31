@@ -22,6 +22,7 @@ final class FoodListViewController: UIViewController, FoodListViewDelegate {
     
     // MARK: - Views
     
+    private let splashViewController = SplashViewController()
     private let searchController = UISearchController()
     private let foodListView = FoodListView()
     
@@ -65,11 +66,18 @@ final class FoodListViewController: UIViewController, FoodListViewDelegate {
         let recipeViewController = RecipeViewController()
         recipeViewController.foodData = data
         
+        guard let width = view.window?.windowScene?.screen.bounds.width else { return }
+        recipeViewController.viewModel = .init(networkManager: networkManager, width: width)
+        
         self.navigationController?.pushViewController(recipeViewController, animated: true)
     }
     
     private func appearTabBar() {
-        tabBarController?.tabBar.isHidden = false
+//        tabBarController?.tabBar.isHidden = false
+    }
+    
+    private func showSplashView() {
+        present(splashViewController, animated: false)
     }
 }
 
@@ -79,8 +87,10 @@ extension FoodListViewController {
     private func configureNavigationBarItems() {
         let backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: self, action: nil)
         navigationItem.backBarButtonItem = backBarButtonItem
-        let rightBarButtonItem = UIBarButtonItem(title: "찜목록", style: .plain, target: self, action: nil)
-        navigationItem.rightBarButtonItem = rightBarButtonItem
+        
+//        let rightBarButtonItem = UIBarButtonItem(title: "찜목록", style: .plain, target: self, action: nil)
+//        navigationItem.rightBarButtonItem = rightBarButtonItem
+        
         navigationItem.title = "요리 레시피"
     }
     
