@@ -11,7 +11,7 @@ import SwiftSoup
 
 protocol NetworkType {
     func makeFoodData(urlString: String, completion: @escaping (Result<Food, NetworkError>) -> ())
-    func loadImage(imageURL: String?, completion: @escaping (UIImage?) -> ())
+    func loadImage(imageURL: String?, width: CGFloat, completion: @escaping (UIImage?) -> ())
 }
 
 final class NetworkManager: NetworkType {
@@ -21,7 +21,7 @@ final class NetworkManager: NetworkType {
     private var foodData: Food?
     private var ingredientHTMLs: [Element]?
     private var recipes: [Element]?
-
+    
     // MARK: - Methods
 
     func makeFoodData(urlString: String, completion: @escaping (Result<Food, NetworkError>) -> ()) {
@@ -59,7 +59,7 @@ final class NetworkManager: NetworkType {
         }.resume()
     }
     
-    func loadImage(imageURL: String?, completion: @escaping (UIImage?) -> ()) {
+    func loadImage(imageURL: String?, width: CGFloat, completion: @escaping (UIImage?) -> ()) {
         guard let urlString = imageURL,
               let url = URL(string: urlString) else { return }
         
@@ -69,7 +69,9 @@ final class NetworkManager: NetworkType {
                 guard urlString == url.absoluteString else { return }
                 
                 DispatchQueue.main.async {
-                    completion(UIImage(data: data))
+                    var image = UIImage(data: data)
+                    image = image?.resize(newWidth: width)
+                    completion(image)
                 }
             } catch {
                 debugPrint(error)

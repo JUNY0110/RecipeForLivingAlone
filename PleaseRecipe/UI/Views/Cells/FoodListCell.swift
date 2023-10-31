@@ -43,7 +43,7 @@ final class FoodListCell: UITableViewCell {
         $0.text = ""
         $0.textAlignment = .left
         $0.numberOfLines = 1
-        $0.font = .h2
+        $0.font = .h3
         return $0
     }(UILabel())
     
@@ -104,7 +104,7 @@ final class FoodListCell: UITableViewCell {
     // MARK: - Configure
     
     func configureCell(cellViewModelInit networkManager: NetworkManager, _ foodImageName: String?, _ foodName: String, _ foodDescription: String) {
-        self.viewModel = .init(networkManager: networkManager)
+        self.viewModel = .init(networkManager: networkManager, width: 80)
         self.imageURL = foodImageName
         self.foodNameLabel.text = foodName
         self.foodDescriptionLabel.text = foodDescription
