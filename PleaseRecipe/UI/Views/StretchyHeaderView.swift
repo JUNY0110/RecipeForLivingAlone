@@ -153,10 +153,13 @@ final class StretchyHeaderView: UIView {
         
         configureLabelText(numberOfServingLabel, UIImage(systemName: "person")!, "\(numberOfServing)")
         configureLabelText(timeLabel, UIImage(systemName: "clock.arrow.circlepath")!, "\(time)")
-        configureLabelText(youtubeLinkLabel, UIImage(named: "youtube")!, "유튜브")
+        
+        let youtubeImage = youtubeURL.isEmpty ? "youtubeNone" : "youtube"
+        let textColor = youtubeURL.isEmpty ? UIColor.systemGray2 : UIColor.black
+        configureLabelText(youtubeLinkLabel, UIImage(named: youtubeImage)!, "유튜브", textColor)
     }
     
-    private func configureLabelText(_ label: UILabel, _ image: UIImage, _ text: String) {
+    private func configureLabelText(_ label: UILabel, _ image: UIImage, _ text: String, _ textColor: UIColor? = nil ) {
         let attributedString = NSMutableAttributedString(string: "")
         let imageAttachment = NSTextAttachment()
         imageAttachment.image = image
@@ -164,6 +167,7 @@ final class StretchyHeaderView: UIView {
         attributedString.append(NSAttributedString(string: " "))
         attributedString.append(NSAttributedString(string: text))
         label.attributedText = attributedString
+        label.textColor = textColor
     }
     
     // MARK: - Methods
