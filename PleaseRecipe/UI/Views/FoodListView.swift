@@ -7,6 +7,8 @@
 
 import UIKit
 
+import SnapKit
+
 protocol FoodListViewDelegate: AnyObject {
     func moveToRecipeViewController(_ data: Food)
 }
@@ -44,12 +46,14 @@ final class FoodListView: UITableView {
         self.diffableDataSource = UITableViewDiffableDataSource<Section, Food>(tableView: self, cellProvider: { tableView, indexPath, itemIdentifier in
             
             let cell = tableView.dequeueReusableCell(withIdentifier: FoodListCell.identifier, for: indexPath) as! FoodListCell
-            
-            cell.configureCell(cellViewModelInit: self.viewModel.networkManager,
-                               itemIdentifier.foodImageURL,
-                               itemIdentifier.foodName,
-                               itemIdentifier.foodDescription)
-            
+            if let titleEnum = FoodName(rawValue: itemIdentifier.title) {
+                let title = String(reflecting: titleEnum)
+                
+                cell.configureCell(cellViewModelInit: self.viewModel.networkManager,
+                                   itemIdentifier.foodImageURL,
+                                   title,
+                                   itemIdentifier.title)
+            }
             return cell
         })
         
