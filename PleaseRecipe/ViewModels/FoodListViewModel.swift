@@ -12,7 +12,7 @@ final class FoodListViewModel {
     // MARK: - Properties
     
     let networkManager: NetworkManager
-    
+
     // MARK: Output
     
     private var foodDatum = [Food]() {
@@ -44,5 +44,10 @@ final class FoodListViewModel {
                 }
             }
         }
+    }
+    
+    func filteredFoodDatum(with word: String) -> [Food] {
+        let filteredDatum = foodDatum.filter { $0.title.contains(word) }
+        return filteredDatum.isEmpty ? foodDatum : filteredDatum
     }
 }

@@ -60,14 +60,18 @@ final class FoodListView: UITableView {
     func applySnapshot(with word: String = "") {
         var snapshot = NSDiffableDataSourceSnapshot<Section, Food>()
         snapshot.appendSections([.food])
+
+        let filteredFoodDatum = filteredFoodDatum(with: word)
         
-        for foodData in foodDatum {
-            snapshot.appendItems([Item(foodImageURL: foodData.foodImageURL,
-                                       foodName: foodData.title,
-                                       foodDescription: foodData.summary)])
+        for foodData in filteredFoodDatum {
+            snapshot.appendItems([foodData])
         }
         
         diffableDataSource.apply(snapshot)
+    }
+    
+    private func filteredFoodDatum(with word: String) -> [Food] {
+        return viewModel.filteredFoodDatum(with: word)
     }
 }
 
