@@ -7,13 +7,4 @@
 
 import Foundation
 
-struct Food {
-    let foodImageURL: String
-    let title: String
-    let summary: String
-    let numberOfPerson: String
-    let cookingTime: String
-    let youtubeURL: String
-    var ingredientDictionary: [String: String] = [:]
-    var cookingOrders: [String]?
 }
