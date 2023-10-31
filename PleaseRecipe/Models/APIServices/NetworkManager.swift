@@ -119,7 +119,12 @@ final class NetworkManager: NetworkType {
                 let ingredient = try info.select("a[href]").text().replacingOccurrences(of: " 구매", with: "")
                 let capacity = try info.select("span.ingre_unit").text()
                 
-                foodData?.ingredientDictionary[ingredient] = capacity
+                guard let seasoning = Seasoning(rawValue: ingredient) else {
+                    foodData?.ingredients[ingredient] = capacity
+                    continue
+                }
+                
+                foodData?.seasonings[String(reflecting: seasoning)] = capacity
             }
         }
     }
