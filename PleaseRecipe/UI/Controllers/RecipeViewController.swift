@@ -2,7 +2,7 @@
 //  RecipeViewController.swift
 //  PleaseRecipe
 //
-//  Created by 지준용 on 10/22/23.
+//  Created by 지준용 on 10/25/23.
 //
 
 import UIKit
@@ -13,7 +13,8 @@ final class RecipeViewController: UIViewController {
 
     // MARK: - Properties
     
-    var foodData: FoodListView.Item!
+    var foodData: Food!
+    var viewModel: FoodListCellViewModel!
     
     // MARK: - Enum
     
@@ -25,35 +26,22 @@ final class RecipeViewController: UIViewController {
     
     // MARK: - Views
     
-    let scrollView: UIScrollView = {
-        $0.backgroundColor = .yellow
+    private lazy var tableView: UITableView = {
+        $0.backgroundColor = .white
+        $0.separatorStyle = .none
+        $0.allowsSelection = false
+        $0.delegate = self
+        $0.dataSource = self
+        $0.register(RecipeHeader.self, forHeaderFooterViewReuseIdentifier: RecipeHeader.identifier)
+        $0.register(RecipeCell.self, forCellReuseIdentifier: RecipeCell.identifier)
         return $0
-    }(UIScrollView())
-    
-    let contentView = UIView()
-    
-    let headerView: UIImageView = {
-        $0.image = UIImage(named: "image")
-        $0.clipsToBounds = true
-        $0.contentMode = .scaleAspectFill
-        $0.backgroundColor = .gray
-        return $0
-    }(UIImageView())
-    
-    let label: UILabel = {
-        $0.text = "1long text\n\n\n2long text\n\n\n\n\n3long textlong text\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n4textlongtextlong"
-        $0.numberOfLines = 0
-        $0.font = .systemFont(ofSize: 36)
-        return $0
-    }(UILabel())
+    }(UITableView(frame: .zero, style: .grouped))
     
     // MARK: - LifeCycle
     
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        scrollView.delegate = self
-        view.backgroundColor = .white
+        
         tabBarController?.tabBar.isHidden = true
     }
     
@@ -67,28 +55,8 @@ final class RecipeViewController: UIViewController {
     // MARK: - Layout
     
     private func layout() {
-        view.addSubview(scrollView)
-        scrollView.snp.makeConstraints{
-            $0.top.equalTo(view)
-            $0.horizontalEdges.bottom.equalToSuperview()
-        }
-        
-        scrollView.addSubview(contentView)
-        contentView.snp.makeConstraints {
-            $0.top.equalToSuperview().offset(Metric.stickyHeaderHeightMax)
-            $0.horizontalEdges.equalTo(view.snp.horizontalEdges).inset(20)
-            $0.bottom.equalToSuperview()
-        }
-        
-        scrollView.addSubview(headerView)
-        headerView.snp.makeConstraints {
-            $0.top.equalTo(view.snp.top)
-            $0.horizontalEdges.equalTo(view.snp.horizontalEdges)
-            $0.bottom.equalTo(contentView.snp.top).offset(-20)
-        }
-        
-        contentView.addSubview(label)
-        label.snp.makeConstraints {
+        view.addSubview(tableView)
+        tableView.snp.makeConstraints {
             $0.edges.equalToSuperview()
         }
     }
@@ -107,10 +75,18 @@ final class RecipeViewController: UIViewController {
 
 // MARK: - UIScrollViewDelegate
 
-extension RecipeViewController: UIScrollViewDelegate {
+extension RecipeViewController: UITableViewDelegate {
+    func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
+        return 30
+    }
+    
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return UITableView.automaticDimension
+    }
+    
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        let remainingTopSpacing = scrollView.contentOffset.y
         
+        let remainingTopSpacing = scrollView.contentOffset.y
         configureNavigationAppearance(with: remainingTopSpacing)
     }
     
@@ -127,5 +103,81 @@ extension RecipeViewController: UIScrollViewDelegate {
         }
         
         navigationController?.navigationBar.standardAppearance = appearance
+    }
+}
+
+// MARK: - UITableViewDataSource
+
+extension RecipeViewController: UITableViewDataSource {
+    
+    func numberOfSections(in tableView: UITableView) -> Int {
+        return 3
+    }
+    
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        if let section = RecipeSection(rawValue: section) {
+            switch section {
+            case .ingredient: return foodData.ingredients.count
+            case .seasoning: return foodData.seasonings.count
+            case .recipe: return foodData.cookingOrders.count
+            }
+        }
+        return 0
+    }
+    
+    func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
+        let header = tableView.dequeueReusableHeaderFooterView(withIdentifier: RecipeHeader.identifier) as! RecipeHeader
+        
+        if let section = RecipeSection(rawValue: section) {
+            header.ingredientHeaderLabel.text = String(reflecting: section)
+            
+            if section == .recipe {
+                header.measuringHeaderLabel.text = ""
+            }
+        }
+        return header
+    }
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: RecipeCell.identifier, for: indexPath) as! RecipeCell
+        
+        if let section = RecipeSection(rawValue: indexPath.section) {
+            switch section {
+            case .ingredient:
+                let ingredients = foodData.ingredients.sorted(by: {$0.key < $1.key})
+                let ingredient = ingredients[indexPath.row].key
+                let measuring = ingredients[indexPath.row].value
+                
+                cell.configureCell(ingredient, measuring)
+            case .seasoning:
+                let sesonings = foodData.seasonings.sorted(by: {$0.key < $1.key})
+                let sesoning = sesonings[indexPath.row].key
+                let measuring = sesonings[indexPath.row].value
+                
+                cell.configureCell(sesoning, measuring)
+            case .recipe:
+                cell.configureCell("\(indexPath.row + 1). \(foodData.cookingOrders[indexPath.row])", "")
+            }
+        }
+        
+        return cell
+    }
+}
+
+// MARK: - Nested Types
+
+extension RecipeViewController {
+    enum RecipeSection: Int, CustomStringConvertible {
+        case ingredient
+        case seasoning
+        case recipe
+        
+        var description: String {
+            switch self {
+            case .ingredient: "식재료"
+            case .seasoning: "조미료"
+            case .recipe: "레시피"
+            }
+        }
     }
 }
