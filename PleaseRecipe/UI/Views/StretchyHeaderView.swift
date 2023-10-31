@@ -9,6 +9,9 @@ import UIKit
 
 import SnapKit
 
+protocol StretchyHeaderViewDelegate: AnyObject {
+    func tappedYoutubeLink()
+}
 
 final class StretchyHeaderView: UIView {
     
@@ -75,6 +78,10 @@ final class StretchyHeaderView: UIView {
         $0.font = .b2
         $0.textAlignment = .right
         $0.textColor = .red
+        $0.isUserInteractionEnabled = true
+        
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(tappedYoutubeLink))
+        $0.addGestureRecognizer(tapGesture)
         return $0
     }(UILabel())
     
@@ -183,3 +190,7 @@ final class StretchyHeaderView: UIView {
         }
     }
     
+    @objc func tappedYoutubeLink() {
+        delegate?.tappedYoutubeLink()
+    }
+}

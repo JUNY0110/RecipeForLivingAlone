@@ -95,6 +95,10 @@ final class RecipeViewController: UIViewController, StretchyHeaderViewDelegate {
         tableView.tableHeaderView = stretchyHeaderView
     }
     
+    func tappedYoutubeLink() {
+        if let url = URL(string: foodData.youtubeURL) {
+            UIApplication.shared.open(url, options: [:])
+        }
     }
 }
 
