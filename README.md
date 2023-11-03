@@ -1,2 +1,2 @@
 # PleaseRecipe
-레시피를 부탁해 Application Repo
+자취레시피 Application Repo
