@@ -46,8 +46,8 @@ final class FoodListViewModel {
         }
     }
     
-    func filteredFoodDatum(with word: String) -> [Food] {
-        let filteredDatum = foodDatum.filter { $0.title.contains(word) }
+    private func filteredFoodDatum(with word: String) -> [Food] {
+        let filteredDatum = foodDatum.filter { $0.foodName.contains(word) }
         return filteredDatum.isEmpty ? foodDatum : filteredDatum
     }
 }

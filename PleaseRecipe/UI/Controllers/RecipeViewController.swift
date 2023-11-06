@@ -83,15 +83,13 @@ final class RecipeViewController: UIViewController, StretchyHeaderViewDelegate {
     private func configureStretchyHeader() {
         stretchyHeaderView.viewModel = self.viewModel
         
-        if let titleEnum = FoodName(rawValue: foodData.title) {
-            let title = String(reflecting: titleEnum)
-            stretchyHeaderView.configureStretchyHeader(foodData.foodImageURL,
-                                                       title,
-                                                       foodData.title,
-                                                       foodData.numberOfPerson,
-                                                       foodData.cookingTime,
-                                                       foodData.youtubeURL)
-        }
+        stretchyHeaderView.configureStretchyHeader(foodData.foodImageURL,
+                                                   foodData.foodName,
+                                                   foodData.summary,
+                                                   foodData.numberOfPerson,
+                                                   foodData.cookingTime,
+                                                   foodData.youtubeURL)
+        
         tableView.tableHeaderView = stretchyHeaderView
     }
     
@@ -160,11 +158,7 @@ extension RecipeViewController: UITableViewDataSource {
         let header = tableView.dequeueReusableHeaderFooterView(withIdentifier: RecipeHeader.identifier) as! RecipeHeader
         
         if let section = RecipeSection(rawValue: section) {
-            header.ingredientHeaderLabel.text = String(reflecting: section)
-            
-            if section == .recipe {
-                header.measuringHeaderLabel.text = ""
-            }
+            header.configureHeader(left: String(describing: section), right: (section == .recipe ? "" : "계량"))
         }
         return header
     }
@@ -175,19 +169,19 @@ extension RecipeViewController: UITableViewDataSource {
         if let section = RecipeSection(rawValue: indexPath.section) {
             switch section {
             case .ingredient:
-                let ingredients = foodData.ingredients.sorted(by: {$0.key < $1.key})
-                let ingredient = ingredients[indexPath.row].key
-                let measuring = ingredients[indexPath.row].value
+                let ingredients = foodData.ingredients
+                let ingredient = ingredients[indexPath.row].name
+                let measuring = ingredients[indexPath.row].measuring
                 
                 cell.configureCell(ingredient, measuring)
             case .seasoning:
-                let sesonings = foodData.seasonings.sorted(by: {$0.key < $1.key})
-                let sesoning = sesonings[indexPath.row].key
-                let measuring = sesonings[indexPath.row].value
+                let sesonings = foodData.seasonings
+                let sesoning = sesonings[indexPath.row].name
+                let measuring = sesonings[indexPath.row].measuring
                 
                 cell.configureCell(sesoning, measuring)
             case .recipe:
-                cell.configureCell("\(indexPath.row + 1). \(foodData.cookingOrders[indexPath.row])", "")
+                cell.configureCell("\(indexPath.row + 1). \(foodData.cookingOrders[indexPath.row])")
             }
         }
         

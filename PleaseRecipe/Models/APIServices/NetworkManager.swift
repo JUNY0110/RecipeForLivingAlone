@@ -23,7 +23,7 @@ final class NetworkManager: NetworkType {
     private var recipes: [Element]?
     
     // MARK: - Methods
-
+    
     func makeFoodData(urlString: String, completion: @escaping (Result<Food, NetworkError>) -> ()) {
         guard let url = URL(string: urlString) else { return completion(.failure(NetworkError.urlError)) }
         let urlSession = URLSession(configuration: .default)
@@ -42,7 +42,6 @@ final class NetworkManager: NetworkType {
             guard (200..<299) ~= statusCode else {
                 return completion(.failure(self.statusError(statusCode)))
             }
-            
             do {
                 let html = try String(contentsOf: url, encoding: .utf8)
                 let doc: Document = try SwiftSoup.parse(html)
@@ -82,8 +81,7 @@ final class NetworkManager: NetworkType {
     private func parsedData(for doc: Document) throws {
         // html 데이터
         let foodImage = try doc.select("div.centeredcrop")
-        let title = try doc.title()
-        let summary = try doc.select("div.view2_summary_in")
+        let foodDescription = try doc.title()
         
         let numberOfPerson = try doc.select("span.view2_summary_info1")
         let cookingTime = try doc.select("span.view2_summary_info2")
@@ -93,18 +91,22 @@ final class NetworkManager: NetworkType {
         
         // 사용가능 타입 데이터
         let foodImageURL = try foodImage.select("img").attr("src")
-        let summaryText = try summary.text()
         let numberOfPersonText = try numberOfPerson.text()
         let cookingTimeText = try cookingTime.text()
         let youtubeURL = try youtubeLink.select("iframe").attr("org_src")
         
+        guard let foodName = FoodName(rawValue: foodDescription) else { return }
+        let foodNameString = String(describing: foodName)
         
         foodData = .init(foodImageURL: foodImageURL,
-                         title: title,
-                         summary: summaryText,
+                         foodName: foodNameString,
+                         summary: foodDescription,
                          numberOfPerson: numberOfPersonText,
                          cookingTime: cookingTimeText,
-                         youtubeURL: youtubeURL)
+                         youtubeURL: youtubeURL,
+                         ingredients: [],
+                         seasonings: [],
+                         cookingOrders: [])
         
         self.ingredientHTMLs = ingredientHTMLs
         self.recipes = recipes
@@ -121,12 +123,11 @@ final class NetworkManager: NetworkType {
                 let ingredient = try info.select("a[href]").text().replacingOccurrences(of: " 구매", with: "")
                 let capacity = try info.select("span.ingre_unit").text()
                 
-                guard let seasoning = Seasoning(rawValue: ingredient) else {
-                    foodData?.ingredients[ingredient] = capacity
-                    continue
+                if let seasoning = Seasoning(rawValue: ingredient) {
+                    foodData?.seasonings.append(FoodSeasoning(name: String(reflecting: seasoning), measuring: capacity))
+                } else {
+                    foodData?.ingredients.append(FoodIngredient(name: ingredient, measuring: capacity))
                 }
-                
-                foodData?.seasonings[String(reflecting: seasoning)] = capacity
             }
         }
     }

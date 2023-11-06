@@ -19,7 +19,7 @@ final class RecipeHeader: UITableViewHeaderFooterView {
     
     private let hContainerView = UIView()
     
-    let ingredientHeaderLabel: UILabel = {
+    private let sectionLeftLabel: UILabel = {
         $0.text = ""
         $0.textColor = .secondaryLabel
         $0.font = .b2
@@ -27,8 +27,8 @@ final class RecipeHeader: UITableViewHeaderFooterView {
         return $0
     }(UILabel())
     
-    let measuringHeaderLabel: UILabel = {
-        $0.text = "계량"
+    private let sectionRightLabel: UILabel = {
+        $0.text = ""
         $0.textColor = .secondaryLabel
         $0.font = .b2
         $0.textAlignment = .right
@@ -58,16 +58,23 @@ final class RecipeHeader: UITableViewHeaderFooterView {
             $0.verticalEdges.equalToSuperview().inset(2)
         }
         
-        hContainerView.addSubview(ingredientHeaderLabel)
-        ingredientHeaderLabel.snp.makeConstraints {
+        hContainerView.addSubview(sectionLeftLabel)
+        sectionLeftLabel.snp.makeConstraints {
             $0.left.equalToSuperview()
             $0.verticalEdges.equalToSuperview()
         }
         
-        hContainerView.addSubview(measuringHeaderLabel)
-        measuringHeaderLabel.snp.makeConstraints {
+        hContainerView.addSubview(sectionRightLabel)
+        sectionRightLabel.snp.makeConstraints {
             $0.right.equalToSuperview()
             $0.verticalEdges.equalToSuperview()
         }
+    }
+    
+    // MARK: - Configure
+    
+    func configureHeader(left sectionLeftText: String, right sectionRightText: String = "계량") {
+        self.sectionLeftLabel.text = sectionLeftText
+        self.sectionRightLabel.text = sectionRightText
     }
 }
