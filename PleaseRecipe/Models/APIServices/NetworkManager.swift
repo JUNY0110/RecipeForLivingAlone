@@ -11,7 +11,7 @@ import SwiftSoup
 
 protocol NetworkType {
     func makeFoodData(urlString: String, completion: @escaping (Result<Food, NetworkError>) -> ())
-    func loadImage(imageURL: String?, width: CGFloat, completion: @escaping (UIImage?) -> ())
+    func loadImage(imageURL: String?, width: CGFloat, completion: @escaping (UIImage) -> ())
 }
 
 final class NetworkManager: NetworkType {
@@ -21,6 +21,9 @@ final class NetworkManager: NetworkType {
     private var foodData: Food?
     private var ingredientHTMLs: [Element]?
     private var recipes: [Element]?
+    static let shared = NetworkManager()
+    
+    private init() {}
     
     // MARK: - Methods
     
@@ -58,7 +61,7 @@ final class NetworkManager: NetworkType {
         }.resume()
     }
     
-    func loadImage(imageURL: String?, width: CGFloat, completion: @escaping (UIImage?) -> ()) {
+    func loadImage(imageURL: String?, width: CGFloat, completion: @escaping (UIImage) -> ()) {
         guard let urlString = imageURL,
               let url = URL(string: urlString) else { return }
         
