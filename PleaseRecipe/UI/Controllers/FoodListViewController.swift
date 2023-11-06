@@ -20,13 +20,16 @@ final class FoodListViewController: UIViewController {
                     self.setupSnapshot()
                     self.applySnapshot(self.viewModel.snapshot)
                 }
+                
+                DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 3) {
+                    self.dismissSplashView()
+                }
             }
         }
     }
     
     // MARK: - Views
     
-    private let splashViewController = SplashViewController()
     private let searchController = UISearchController()
     private lazy var foodListView: UITableView = {
         $0.backgroundColor = .systemBackground
@@ -51,6 +54,7 @@ final class FoodListViewController: UIViewController {
         configureNavigationBarItems()
         configureSearchBar()
         setupDataSource()
+        showSplashView()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -81,7 +85,13 @@ final class FoodListViewController: UIViewController {
     }
     
     private func showSplashView() {
+        let splashViewController = SplashViewController()
+        splashViewController.modalPresentationStyle = .overFullScreen
         present(splashViewController, animated: false)
+    }
+    
+    private func dismissSplashView() {
+        dismiss(animated: false)
     }
 }
 
