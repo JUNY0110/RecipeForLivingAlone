@@ -66,17 +66,21 @@ final class NetworkManager: NetworkType {
               let url = URL(string: urlString) else { return }
         
         DispatchQueue.global().async {
-            do {
-                let data = try Data(contentsOf: url)
-                guard urlString == url.absoluteString else { return }
-                
-                DispatchQueue.main.async {
-                    var image = UIImage(data: data)
-                    image = image?.resize(newWidth: width)
-                    completion(image)
-                }
-            } catch {
-                debugPrint(error)
+            guard let imageSource = CGImageSourceCreateWithURL(url as CFURL, nil) else {
+                fatalError("Can not get imageSource")
+            }
+            
+            let options: [NSString: Any] = [
+                kCGImageSourceThumbnailMaxPixelSize: width * 460 / 163,
+                kCGImageSourceCreateThumbnailFromImageAlways: true
+            ]
+            
+            guard let scaledImage = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options as CFDictionary) else {
+                fatalError("Can not get scaledImage")
+            }
+            
+            DispatchQueue.main.async {
+                completion(UIImage(cgImage: scaledImage))
             }
         }
     }

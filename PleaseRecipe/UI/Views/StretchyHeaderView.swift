@@ -189,8 +189,11 @@ final class StretchyHeaderView: UIView {
     }
     
     private func loadImage() {
-        viewModel.onCompleted = { image in
-            self.foodImageView.image = image
+        viewModel.onCompleted = { [weak self] image in
+            guard let weakSelf = self else { return }
+            
+            weakSelf.foodImageView.image = image
+            weakSelf.stopActivityIndicator()
         }
     }
     

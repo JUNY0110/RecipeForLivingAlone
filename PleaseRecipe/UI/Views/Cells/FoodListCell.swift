@@ -14,6 +14,8 @@ final class FoodListCell: UITableViewCell {
     // MARK: - Properties
     
     static let identifier = "foodListCell"
+    private var viewModel: FoodListCellViewModel!
+    
     private var imageURL: String? {
         didSet {
             viewModel.imageURL = imageURL
@@ -103,8 +105,11 @@ final class FoodListCell: UITableViewCell {
     
     // MARK: - Configure
     
-    func configureCell(cellViewModelInit networkManager: NetworkManager, _ foodImageName: String?, _ foodName: String, _ foodDescription: String) {
-        self.viewModel = .init(networkManager: networkManager, width: 80)
+    func configureCell(_ foodImageName: String?, _ foodName: String, _ foodDescription: String) {
+        
+        startActivityIndicator()
+        
+        self.viewModel = .init(width: 80)
         self.imageURL = foodImageName
         self.foodNameLabel.text = foodName
         self.foodDescriptionLabel.text = foodDescription
@@ -116,7 +121,10 @@ final class FoodListCell: UITableViewCell {
         viewModel.onCompleted = { [weak self] image in
             guard let weakSelf = self else { return }
             
-            weakSelf.foodImageView.image = image
+            DispatchQueue.main.async {
+                weakSelf.foodImageView.image = image
+                weakSelf.stopActivityIndicator()
+            }
         }
     }
 }
