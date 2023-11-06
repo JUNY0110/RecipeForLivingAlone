@@ -14,6 +14,8 @@ final class FoodListCell: UITableViewCell {
     // MARK: - Properties
     
     static let identifier = "foodListCell"
+    private var viewModel: FoodListCellViewModel!
+    
     private var imageURL: String? {
         didSet {
             viewModel.imageURL = imageURL
@@ -21,9 +23,13 @@ final class FoodListCell: UITableViewCell {
         }
     }
     
-    var viewModel: FoodListCellViewModel!
-    
     // MARK: - Views
+    
+    private let activityIndicatorView: UIActivityIndicatorView = {
+        $0.hidesWhenStopped = true
+        $0.style = .medium
+        return $0
+    }(UIActivityIndicatorView())
     
     private let foodImageView: UIImageView = {
         $0.backgroundColor = .systemGray6
@@ -43,7 +49,7 @@ final class FoodListCell: UITableViewCell {
         $0.text = ""
         $0.textAlignment = .left
         $0.numberOfLines = 1
-        $0.font = .h2
+        $0.font = .h3
         return $0
     }(UILabel())
     
@@ -90,6 +96,11 @@ final class FoodListCell: UITableViewCell {
             $0.size.equalTo(80)
         }
         
+        foodImageView.addSubview(activityIndicatorView)
+        activityIndicatorView.snp.makeConstraints {
+            $0.edges.equalToSuperview()
+        }
+        
         contentView.addSubview(vStackView)
         vStackView.addArrangedSubview(foodNameLabel)
         vStackView.addArrangedSubview(foodDescriptionLabel)
@@ -103,8 +114,11 @@ final class FoodListCell: UITableViewCell {
     
     // MARK: - Configure
     
-    func configureCell(cellViewModelInit networkManager: NetworkManager, _ foodImageName: String?, _ foodName: String, _ foodDescription: String) {
-        self.viewModel = .init(networkManager: networkManager)
+    func configureCell(_ foodImageName: String?, _ foodName: String, _ foodDescription: String) {
+        
+        startActivityIndicator()
+        
+        self.viewModel = .init(width: 80)
         self.imageURL = foodImageName
         self.foodNameLabel.text = foodName
         self.foodDescriptionLabel.text = foodDescription
@@ -116,7 +130,18 @@ final class FoodListCell: UITableViewCell {
         viewModel.onCompleted = { [weak self] image in
             guard let weakSelf = self else { return }
             
-            weakSelf.foodImageView.image = image
+            DispatchQueue.main.async {
+                weakSelf.foodImageView.image = image
+                weakSelf.stopActivityIndicator()
+            }
         }
+    }
+    
+    private func startActivityIndicator() {
+        activityIndicatorView.startAnimating()
+    }
+    
+    private func stopActivityIndicator() {
+        activityIndicatorView.stopAnimating()
     }
 }

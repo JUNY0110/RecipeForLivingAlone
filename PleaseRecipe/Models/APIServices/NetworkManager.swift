@@ -11,7 +11,7 @@ import SwiftSoup
 
 protocol NetworkType {
     func makeFoodData(urlString: String, completion: @escaping (Result<Food, NetworkError>) -> ())
-    func loadImage(imageURL: String?, completion: @escaping (UIImage?) -> ())
+    func loadImage(imageURL: String?, width: CGFloat, completion: @escaping (UIImage) -> ())
 }
 
 final class NetworkManager: NetworkType {
@@ -21,9 +21,12 @@ final class NetworkManager: NetworkType {
     private var foodData: Food?
     private var ingredientHTMLs: [Element]?
     private var recipes: [Element]?
-
+    static let shared = NetworkManager()
+    
+    private init() {}
+    
     // MARK: - Methods
-
+    
     func makeFoodData(urlString: String, completion: @escaping (Result<Food, NetworkError>) -> ()) {
         guard let url = URL(string: urlString) else { return completion(.failure(NetworkError.urlError)) }
         let urlSession = URLSession(configuration: .default)
@@ -42,7 +45,6 @@ final class NetworkManager: NetworkType {
             guard (200..<299) ~= statusCode else {
                 return completion(.failure(self.statusError(statusCode)))
             }
-            
             do {
                 let html = try String(contentsOf: url, encoding: .utf8)
                 let doc: Document = try SwiftSoup.parse(html)
@@ -59,20 +61,26 @@ final class NetworkManager: NetworkType {
         }.resume()
     }
     
-    func loadImage(imageURL: String?, completion: @escaping (UIImage?) -> ()) {
+    func loadImage(imageURL: String?, width: CGFloat, completion: @escaping (UIImage) -> ()) {
         guard let urlString = imageURL,
               let url = URL(string: urlString) else { return }
         
         DispatchQueue.global().async {
-            do {
-                let data = try Data(contentsOf: url)
-                guard urlString == url.absoluteString else { return }
-                
-                DispatchQueue.main.async {
-                    completion(UIImage(data: data))
-                }
-            } catch {
-                debugPrint(error)
+            guard let imageSource = CGImageSourceCreateWithURL(url as CFURL, nil) else {
+                fatalError("Can not get imageSource")
+            }
+            
+            let options: [NSString: Any] = [
+                kCGImageSourceThumbnailMaxPixelSize: width * 460 / 163,
+                kCGImageSourceCreateThumbnailFromImageAlways: true
+            ]
+            
+            guard let scaledImage = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options as CFDictionary) else {
+                fatalError("Can not get scaledImage")
+            }
+            
+            DispatchQueue.main.async {
+                completion(UIImage(cgImage: scaledImage))
             }
         }
     }
@@ -80,8 +88,7 @@ final class NetworkManager: NetworkType {
     private func parsedData(for doc: Document) throws {
         // html 데이터
         let foodImage = try doc.select("div.centeredcrop")
-        let title = try doc.title()
-        let summary = try doc.select("div.view2_summary_in")
+        let foodDescription = try doc.title()
         
         let numberOfPerson = try doc.select("span.view2_summary_info1")
         let cookingTime = try doc.select("span.view2_summary_info2")
@@ -91,18 +98,22 @@ final class NetworkManager: NetworkType {
         
         // 사용가능 타입 데이터
         let foodImageURL = try foodImage.select("img").attr("src")
-        let summaryText = try summary.text()
         let numberOfPersonText = try numberOfPerson.text()
         let cookingTimeText = try cookingTime.text()
         let youtubeURL = try youtubeLink.select("iframe").attr("org_src")
         
+        guard let foodName = FoodName(rawValue: foodDescription) else { return }
+        let foodNameString = String(describing: foodName)
         
         foodData = .init(foodImageURL: foodImageURL,
-                         title: title,
-                         summary: summaryText,
+                         foodName: foodNameString,
+                         summary: foodDescription,
                          numberOfPerson: numberOfPersonText,
                          cookingTime: cookingTimeText,
-                         youtubeURL: youtubeURL)
+                         youtubeURL: youtubeURL,
+                         ingredients: [],
+                         seasonings: [],
+                         cookingOrders: [])
         
         self.ingredientHTMLs = ingredientHTMLs
         self.recipes = recipes
@@ -119,7 +130,11 @@ final class NetworkManager: NetworkType {
                 let ingredient = try info.select("a[href]").text().replacingOccurrences(of: " 구매", with: "")
                 let capacity = try info.select("span.ingre_unit").text()
                 
-                foodData?.ingredientDictionary[ingredient] = capacity
+                if let seasoning = Seasoning(rawValue: ingredient) {
+                    foodData?.seasonings.append(FoodSeasoning(name: String(reflecting: seasoning), measuring: capacity))
+                } else {
+                    foodData?.ingredients.append(FoodIngredient(name: ingredient, measuring: capacity))
+                }
             }
         }
     }

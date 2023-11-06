@@ -11,7 +11,7 @@ final class FoodListCellViewModel {
     
     // MARK: - Properties
     
-    let networkManager: NetworkManager
+    private let networkManager = NetworkManager.shared
     
     // MARK: Input
     
@@ -20,6 +20,8 @@ final class FoodListCellViewModel {
             loadImage()
         }
     }
+    
+    let width: CGFloat
     
     // MARK: Ouput
     
@@ -33,15 +35,16 @@ final class FoodListCellViewModel {
     
     // MARK: - Init
     
-    init(networkManager: NetworkManager) {
-        self.networkManager = networkManager
+    init(width: CGFloat) {
+        self.width = width
     }
     
     // MARK: - Methods
     
     func loadImage() {
-        networkManager.loadImage(imageURL: imageURL) { [weak self] image in
-            self?.foodImage = image
+        networkManager.loadImage(imageURL: imageURL, width: width) { [weak self] image in
+            guard let weakSelf = self else { return }
+            weakSelf.foodImage = image
         }
     }
 }
