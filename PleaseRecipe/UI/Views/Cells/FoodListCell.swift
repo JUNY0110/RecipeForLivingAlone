@@ -23,9 +23,13 @@ final class FoodListCell: UITableViewCell {
         }
     }
     
-    var viewModel: FoodListCellViewModel!
-    
     // MARK: - Views
+    
+    private let activityIndicatorView: UIActivityIndicatorView = {
+        $0.hidesWhenStopped = true
+        $0.style = .medium
+        return $0
+    }(UIActivityIndicatorView())
     
     private let foodImageView: UIImageView = {
         $0.backgroundColor = .systemGray6
@@ -92,6 +96,11 @@ final class FoodListCell: UITableViewCell {
             $0.size.equalTo(80)
         }
         
+        foodImageView.addSubview(activityIndicatorView)
+        activityIndicatorView.snp.makeConstraints {
+            $0.edges.equalToSuperview()
+        }
+        
         contentView.addSubview(vStackView)
         vStackView.addArrangedSubview(foodNameLabel)
         vStackView.addArrangedSubview(foodDescriptionLabel)
@@ -126,5 +135,13 @@ final class FoodListCell: UITableViewCell {
                 weakSelf.stopActivityIndicator()
             }
         }
+    }
+    
+    private func startActivityIndicator() {
+        activityIndicatorView.startAnimating()
+    }
+    
+    private func stopActivityIndicator() {
+        activityIndicatorView.stopAnimating()
     }
 }

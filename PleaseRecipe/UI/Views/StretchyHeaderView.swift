@@ -19,7 +19,7 @@ final class StretchyHeaderView: UIView {
     
     weak var delegate: StretchyHeaderViewDelegate?
     var viewModel: FoodListCellViewModel!
-    var imageURL: String? {
+    private var imageURL: String? {
         didSet {
             viewModel.imageURL = imageURL
             loadImage()
@@ -30,6 +30,12 @@ final class StretchyHeaderView: UIView {
     
     private let containerView = UIView()
     
+    private let activityIndicatorView: UIActivityIndicatorView = {
+        $0.hidesWhenStopped = true
+        $0.style = .large
+        return $0
+    }(UIActivityIndicatorView())
+    
     private let foodImageView: UIImageView = {
         $0.backgroundColor = .systemGray6
         $0.clipsToBounds = true
@@ -37,14 +43,14 @@ final class StretchyHeaderView: UIView {
         return $0
     }(UIImageView())
     
-    let foodNameLabel: UILabel = {
+    private let foodNameLabel: UILabel = {
         $0.text = ""
         $0.font = .h2
         $0.textAlignment = .left
         return $0
     }(UILabel())
     
-    let foodDescriptionLabel: UILabel = {
+    private let foodDescriptionLabel: UILabel = {
         $0.text = ""
         $0.font = .b2
         $0.textAlignment = .left
@@ -96,6 +102,8 @@ final class StretchyHeaderView: UIView {
     override init(frame: CGRect) {
         super.init(frame: frame)
         
+        backgroundColor = .systemBackground
+        
         layout()
     }
     
@@ -110,6 +118,12 @@ final class StretchyHeaderView: UIView {
         addSubview(containerView)
         containerView.addSubview(foodImageView)
 
+        foodImageView.addSubview(activityIndicatorView)
+        activityIndicatorView.snp.makeConstraints {
+            $0.top.equalTo(safeAreaLayoutGuide)
+            $0.bottom.horizontalEdges.equalToSuperview()
+        }
+        
         addSubview(foodNameLabel)
         foodNameLabel.snp.makeConstraints {
             $0.top.equalTo(containerView.snp.bottom).offset(16)
@@ -147,6 +161,9 @@ final class StretchyHeaderView: UIView {
                                  _ numberOfServing: String,
                                  _ time: String,
                                  _ youtubeURL: String) {
+        
+        self.startActivityIndicator()
+        
         self.imageURL = foodImageURL
         self.foodNameLabel.text = foodName
         self.foodDescriptionLabel.text = foodDescription
@@ -154,8 +171,7 @@ final class StretchyHeaderView: UIView {
         configureLabelText(numberOfServingLabel, UIImage(systemName: "person")!, "\(numberOfServing)")
         configureLabelText(timeLabel, UIImage(systemName: "clock.arrow.circlepath")!, "\(time)")
         
-        let youtubeImage = youtubeURL.isEmpty ? "youtubeNone" : "youtube"
-        let textColor = youtubeURL.isEmpty ? UIColor.systemGray2 : UIColor.black
+        let (youtubeImage, textColor) = youtubeURL.isEmpty ? ("youtubeNone", UIColor.systemGray2) : ("youtube", UIColor.black)
         configureLabelText(youtubeLinkLabel, UIImage(named: youtubeImage)!, "유튜브", textColor)
     }
     
@@ -164,8 +180,7 @@ final class StretchyHeaderView: UIView {
         let imageAttachment = NSTextAttachment()
         imageAttachment.image = image
         attributedString.append(NSAttributedString(attachment: imageAttachment))
-        attributedString.append(NSAttributedString(string: " "))
-        attributedString.append(NSAttributedString(string: text))
+        attributedString.append(NSAttributedString(string: " \(text)"))
         label.attributedText = attributedString
         label.textColor = textColor
     }
@@ -199,5 +214,15 @@ final class StretchyHeaderView: UIView {
     
     @objc func tappedYoutubeLink() {
         delegate?.tappedYoutubeLink()
+    }
+    
+    
+    private func startActivityIndicator() {
+        activityIndicatorView.startAnimating()
+    }
+    
+    private func stopActivityIndicator() {
+        activityIndicatorView.stopAnimating()
+        activityIndicatorView.removeFromSuperview()
     }
 }
