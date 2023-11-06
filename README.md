@@ -13,7 +13,7 @@
   - SnapKit
   - SwiftSoup
   - URLSession
-  - Lottie (예정)
+  - Lottie
   - FireBase (예정)
 
 -----
