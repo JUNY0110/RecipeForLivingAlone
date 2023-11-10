@@ -13,16 +13,12 @@ final class FoodListViewController: UIViewController {
 
     // MARK: - Properties
     
-    private var viewModel: FoodListViewModel! {
+    var viewModel: FoodListViewModel! {
         didSet {
             viewModel.onCompletedData = {
                 DispatchQueue.main.async {
                     self.setupSnapshot()
                     self.applySnapshot(self.viewModel.snapshot)
-                }
-                
-                DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 3) {
-                    self.dismissSplashView()
                 }
             }
         }
@@ -48,13 +44,10 @@ final class FoodListViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
-        
-        setupViewModel()
-        
+                
         configureNavigationBarItems()
         configureSearchBar()
         setupDataSource()
-        showSplashView()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -82,16 +75,6 @@ final class FoodListViewController: UIViewController {
     
     private func appearTabBar() {
 //        tabBarController?.tabBar.isHidden = false
-    }
-    
-    private func showSplashView() {
-        let splashViewController = SplashViewController()
-        splashViewController.modalPresentationStyle = .overFullScreen
-        present(splashViewController, animated: false)
-    }
-    
-    private func dismissSplashView() {
-        dismiss(animated: false)
     }
 }
 
