@@ -40,6 +40,7 @@ final class FoodListCell: UITableViewCell {
     
     private let vStackView: UIStackView = {
         $0.axis = .vertical
+        $0.distribution = .fillProportionally
         $0.alignment = .top
         $0.spacing = 10
         return $0
