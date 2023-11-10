@@ -12,6 +12,10 @@ import SnapKit
 
 final class SplashViewController: UIViewController {
     
+    // MARK: - Properties
+    
+    private var viewModel = FoodListViewModel()
+    
     // MARK: - Views
     
     private let animationView: LottieAnimationView = {
@@ -27,6 +31,12 @@ final class SplashViewController: UIViewController {
         view.backgroundColor = .white
         
         layout()
+        
+        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 3) {
+            self.dismiss(animated: false)
+            
+            self.showFoodListViewController()
+        }
     }
     
     // MARK: - Layout
@@ -38,5 +48,14 @@ final class SplashViewController: UIViewController {
             $0.size.equalTo(100)
             $0.center.equalToSuperview()
         }
+    }
+    
+    private func showFoodListViewController() {
+        let foodListViewController = FoodListViewController()
+        foodListViewController.viewModel = viewModel
+        
+        let navigationController = UINavigationController(rootViewController: foodListViewController)
+        navigationController.modalPresentationStyle = .fullScreen
+        present(navigationController, animated: false)
     }
 }
