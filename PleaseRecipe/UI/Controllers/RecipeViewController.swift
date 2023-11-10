@@ -22,6 +22,7 @@ final class RecipeViewController: UIViewController, StretchyHeaderViewDelegate {
         static var statusBarHeight: CGFloat!
         static var stickyHeaderImageHeightMin: CGFloat!
         static var stickyHeaderHeight: CGFloat!
+        static var stickyHeaderWidth: CGFloat!
         static var stickyHeaderHeightMaxWithoutStatusBar: CGFloat!
     }
     
@@ -45,6 +46,7 @@ final class RecipeViewController: UIViewController, StretchyHeaderViewDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        view.backgroundColor = .systemBackground
         tabBarController?.tabBar.isHidden = true
         stretchyHeaderView.delegate = self
         configureStretchyHeader()
@@ -65,18 +67,22 @@ final class RecipeViewController: UIViewController, StretchyHeaderViewDelegate {
             $0.edges.equalToSuperview()
         }
         
-        tableView.tableHeaderView?.frame = CGRect(x: 0, y: 0, width: view.frame.size.width, height: Metric.stickyHeaderHeight)
+        tableView.tableHeaderView?.frame = CGRect(x: 0, y: 0, width: Metric.stickyHeaderWidth, height: Metric.stickyHeaderHeight)
     }
     
+    // MARK: - Methods
+    
     private func setupMetric() {
-        guard let statusBarHeight = view.window?.windowScene?.statusBarManager?.statusBarFrame.height,
-              let viewHeight = view.window?.windowScene?.screen.bounds.height else {
+        guard let statusBarHeight = statusBarFrame?.height,
+              let viewWidth = screenWidth,
+              let viewHeight = screenHeight else {
             return
         }
         
         Metric.statusBarHeight = statusBarHeight + 6
         Metric.stickyHeaderImageHeightMin = viewHeight * 0.3 - 60
         Metric.stickyHeaderHeight = viewHeight * 0.3 + 70
+        Metric.stickyHeaderWidth = viewWidth
         Metric.stickyHeaderHeightMaxWithoutStatusBar = Metric.stickyHeaderImageHeightMin - Metric.statusBarHeight - 40
     }
     

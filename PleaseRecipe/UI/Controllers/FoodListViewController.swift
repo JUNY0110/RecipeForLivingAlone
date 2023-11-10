@@ -74,7 +74,7 @@ final class FoodListViewController: UIViewController {
         let recipeViewController = RecipeViewController()
         recipeViewController.foodData = data
         
-        guard let width = view.window?.windowScene?.screen.bounds.width else { return }
+        guard let width = screenWidth else { return }
         recipeViewController.viewModel = .init(width: width)
         
         self.navigationController?.pushViewController(recipeViewController, animated: true)
