@@ -115,12 +115,12 @@ final class FoodListCell: UITableViewCell {
     
     // MARK: - Configure
     
-    func configureCell(_ foodImageName: String?, _ foodName: String, _ foodDescription: String) {
+    func configureCell(_ foodImageUrl: String?, _ foodName: String, _ foodDescription: String) {
         
         startActivityIndicator()
         
         self.viewModel = .init(width: 80)
-        self.imageURL = foodImageName
+        self.imageURL = foodImageUrl
         self.foodNameLabel.text = foodName
         self.foodDescriptionLabel.text = foodDescription
     }

@@ -17,8 +17,8 @@ final class FoodListViewController: UIViewController {
         didSet {
             viewModel.onCompletedData = {
                 DispatchQueue.main.async {
-                    self.setupSnapshot()
-                    self.applySnapshot(self.viewModel.snapshot)
+                    let snapshot = self.setupSnapshot()
+                    self.applySnapshot(snapshot)
                 }
             }
         }
@@ -112,8 +112,9 @@ extension FoodListViewController {
         foodListView.dataSource = viewModel.diffableDataSource
     }
     
-    private func setupSnapshot(with word: String = "") {
+    private func setupSnapshot(with word: String = "") -> NSDiffableDataSourceSnapshot<Section, Food> {
         viewModel.setupSnapshot(with: word)
+        return viewModel.snapshot
     }
     
     private func applySnapshot(_ snapshot: NSDiffableDataSourceSnapshot<Section, Food>) {
@@ -125,8 +126,8 @@ extension FoodListViewController {
 
 extension FoodListViewController: UISearchBarDelegate {
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-        setupSnapshot(with: searchText)
-        applySnapshot(viewModel.snapshot)
+        let snapshot = setupSnapshot(with: searchText)
+        applySnapshot(snapshot)
     }
     
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
@@ -134,14 +135,14 @@ extension FoodListViewController: UISearchBarDelegate {
             return
         }
         
-        setupSnapshot(with: text)
-        applySnapshot(viewModel.snapshot)
+        let snapshot = setupSnapshot(with: text)
+        applySnapshot(snapshot)
         dismissKeyboard()
     }
     
     func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
-        setupSnapshot()
-        applySnapshot(viewModel.snapshot)
+        let snapshot = setupSnapshot()
+        applySnapshot(snapshot)
         dismissKeyboard()
     }
     
