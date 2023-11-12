@@ -44,7 +44,9 @@ final class FoodListCellViewModel {
     private func loadImage() {
         imageCache.loadImage(imageURL: imageURL) { [weak self] image in
             guard let weakSelf = self else { return }
-            weakSelf.foodImage = image
+            let resizedImage = image?.resize(newWidth: weakSelf.width)
+            
+            weakSelf.foodImage = resizedImage
         }
     }
 }
