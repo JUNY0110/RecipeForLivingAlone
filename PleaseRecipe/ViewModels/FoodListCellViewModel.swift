@@ -11,20 +11,20 @@ final class FoodListCellViewModel {
     
     // MARK: - Properties
     
-    private let networkManager = NetworkManager.shared
+    private let imageCache = ImageCacheManager.shared
     
     // MARK: Input
-    
+
     var imageURL: String? {
         didSet {
             loadImage()
         }
     }
     
-    let width: CGFloat
+    private let width: CGFloat
     
     // MARK: Ouput
-    
+
     private var foodImage: UIImage? {
         didSet {
             onCompleted(foodImage)
@@ -41,8 +41,8 @@ final class FoodListCellViewModel {
     
     // MARK: - Methods
     
-    func loadImage() {
-        networkManager.loadImage(imageURL: imageURL, width: width) { [weak self] image in
+    private func loadImage() {
+        imageCache.loadImage(imageURL: imageURL) { [weak self] image in
             guard let weakSelf = self else { return }
             weakSelf.foodImage = image
         }

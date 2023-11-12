@@ -11,7 +11,6 @@ import SwiftSoup
 
 protocol NetworkType {
     func makeFoodData(urlString: String, completion: @escaping (Result<Food, NetworkError>) -> ())
-    func loadImage(imageURL: String?, width: CGFloat, completion: @escaping (UIImage) -> ())
 }
 
 final class NetworkManager: NetworkType {
@@ -59,30 +58,6 @@ final class NetworkManager: NetworkType {
                 completion(.failure(NetworkError.parsingError))
             }
         }.resume()
-    }
-    
-    func loadImage(imageURL: String?, width: CGFloat, completion: @escaping (UIImage) -> ()) {
-        guard let urlString = imageURL,
-              let url = URL(string: urlString) else { return }
-        
-        DispatchQueue.global().async {
-            guard let imageSource = CGImageSourceCreateWithURL(url as CFURL, nil) else {
-                fatalError("Can not get imageSource")
-            }
-            
-            let options: [NSString: Any] = [
-                kCGImageSourceThumbnailMaxPixelSize: width * 460 / 163,
-                kCGImageSourceCreateThumbnailFromImageAlways: true
-            ]
-            
-            guard let scaledImage = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options as CFDictionary) else {
-                fatalError("Can not get scaledImage")
-            }
-            
-            DispatchQueue.main.async {
-                completion(UIImage(cgImage: scaledImage))
-            }
-        }
     }
     
     private func parsedData(for doc: Document) throws {
