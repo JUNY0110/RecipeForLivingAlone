@@ -11,8 +11,10 @@ final class FoodListViewModel {
 
     // MARK: - Properties
     
-    let networkManager = NetworkManager.shared
-
+    private let networkManager = NetworkManager.shared
+    var diffableDataSource: UITableViewDiffableDataSource<Section, Food>!
+    var snapshot: NSDiffableDataSourceSnapshot<Section, Food>!
+    
     // MARK: Output
     
     private var foodDatum = [Food]() {
@@ -20,32 +22,21 @@ final class FoodListViewModel {
             onCompletedData()
         }
     }
-    var diffableDataSource: UITableViewDiffableDataSource<Section, Food>!
-    var snapshot: NSDiffableDataSourceSnapshot<Section, Food>!
     
     var onCompletedData: () -> () = {}
     
     // MARK: - Init
     
     init() {
-        makeFoodDatum()
+        fetchFoodDatum()
     }
     
     // MARK: - Methods
     
-    private func makeFoodDatum() {
-        for mainURL in APIEnvironment.mainURLs {
-            networkManager.makeFoodData(urlString: APIEnvironment.baseURL + mainURL) { result in
-                switch result {
-                case .success(let food):
-                    DispatchQueue.main.async {
-                        if !self.foodDatum.contains(food) {
-                            self.foodDatum.append(food)
-                        }
-                    }
-                case .failure(let error):
-                    debugPrint(String(reflecting: error))
-                }
+    private func fetchFoodDatum() {
+        networkManager.makeFoodDatum { food in
+            DispatchQueue.main.async {
+                self.foodDatum.append(food)
             }
         }
     }

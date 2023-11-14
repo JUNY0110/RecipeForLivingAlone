@@ -10,27 +10,41 @@ import UIKit
 import SwiftSoup
 
 protocol NetworkType {
-    func makeFoodData(urlString: String, completion: @escaping (Result<Food, NetworkError>) -> ())
+    func makeFoodDatum(completion: @escaping (Food) -> ())
 }
 
 final class NetworkManager: NetworkType {
 
     // MARK: - Properties
     
-    private var foodData: Food?
-    private var ingredientHTMLs: [Element]?
-    private var recipes: [Element]?
     static let shared = NetworkManager()
     
     private init() {}
     
     // MARK: - Methods
     
-    func makeFoodData(urlString: String, completion: @escaping (Result<Food, NetworkError>) -> ()) {
+    func makeFoodDatum(completion: @escaping (Food) -> ()) {
+        for mainURL in APIEnvironment.mainURLs {
+            self.makeFoodData(urlString: APIEnvironment.baseURL + mainURL) { result in
+                switch result {
+                case .success(let food):
+                    completion(food)
+                case .failure(let error):
+                    debugPrint(String(reflecting: error))
+                }
+            }
+        }
+    }
+    
+    private func makeFoodData(urlString: String, completion: @escaping (Result<Food, NetworkError>) -> ()) {
+        var foodData: Food?
+        var ingredientHTMLs: [Element]?
+        var recipes: [Element]?
+        
         guard let url = URL(string: urlString) else { return completion(.failure(NetworkError.urlError)) }
         let urlSession = URLSession(configuration: .default)
         
-        urlSession.dataTask(with: url) { _, response, error in
+        urlSession.dataTask(with: url) { data, response, error in
             guard error == nil else {
                 return completion(.failure(NetworkError.networkingError))
             }
@@ -42,17 +56,21 @@ final class NetworkManager: NetworkType {
             let statusCode = response.statusCode
             
             guard (200..<299) ~= statusCode else {
-                return completion(.failure(self.statusError(statusCode)))
+                return completion(.failure(NetworkError.statusError(statusCode)))
             }
+            
             do {
                 let html = try String(contentsOf: url, encoding: .utf8)
                 let doc: Document = try SwiftSoup.parse(html)
                 
-                try self.parsedData(for: doc)
-                try self.makeIngredientDictionay(with: self.ingredientHTMLs)
-                try self.makeCookingOrders(for: self.recipes)
+                (foodData, ingredientHTMLs, recipes) = try self.parsedData(for: doc,
+                                                                           foodData: foodData,
+                                                                           ingredientHTMLs: ingredientHTMLs,
+                                                                           recipes: recipes)
+                foodData = try self.makeIngredientDictionay(with: ingredientHTMLs, foodData: foodData)
+                foodData = try self.makeCookingOrders(for: &recipes, foodData: foodData)
                 
-                guard let foodData = self.foodData else { return }
+                guard let foodData = foodData else { throw NetworkError.CrawlingError.foodDataError }
                 completion(.success(foodData))
             } catch {
                 completion(.failure(NetworkError.parsingError))
@@ -60,15 +78,21 @@ final class NetworkManager: NetworkType {
         }.resume()
     }
     
-    private func parsedData(for doc: Document) throws {
+    private func parsedData(for doc: Document, 
+                            foodData: Food?,
+                            ingredientHTMLs: [Element]?,
+                            recipes: [Element]?) throws -> (Food?, [Element]?, [Element]?) {
+        var foodData = foodData
+        var ingredientHTMLs = ingredientHTMLs
+        var recipes = recipes
         // html 데이터
         let foodImage = try doc.select("div.centeredcrop")
         let foodDescription = try doc.title()
         
         let numberOfPerson = try doc.select("span.view2_summary_info1")
         let cookingTime = try doc.select("span.view2_summary_info2")
-        let ingredientHTMLs = try doc.getElementById("divConfirmedMaterialArea")?.select("div.ready_ingre3").array()
-        let recipes = try doc.select("div.view_step").array()
+        let ingredientHTMLArray = try doc.getElementById("divConfirmedMaterialArea")?.select("div.ready_ingre3").array()
+        let recipeArray = try doc.select("div.view_step").array()
         let youtubeLink = try doc.select("div.iframe_wrap")
         
         // 사용가능 타입 데이터
@@ -77,7 +101,10 @@ final class NetworkManager: NetworkType {
         let cookingTimeText = try cookingTime.text()
         let youtubeURL = try youtubeLink.select("iframe").attr("org_src")
         
-        guard let foodName = FoodName(rawValue: foodDescription) else { return }
+        guard let foodName = FoodName(rawValue: foodDescription) else {
+            throw NetworkError.CrawlingError.foodNameError
+        }
+        
         let foodNameString = String(describing: foodName)
         
         foodData = .init(foodImageURL: foodImageURL,
@@ -90,12 +117,15 @@ final class NetworkManager: NetworkType {
                          seasonings: [],
                          cookingOrders: [])
         
-        self.ingredientHTMLs = ingredientHTMLs
-        self.recipes = recipes
+        ingredientHTMLs = ingredientHTMLArray
+        recipes = recipeArray
+        
+        return (foodData, ingredientHTMLs, recipes)
     }
     
-    private func makeIngredientDictionay(with ingredientHTMLs: [Element]?) throws {
-        guard let ingredientHTMLs = ingredientHTMLs else { return }
+    private func makeIngredientDictionay(with ingredientHTMLs: [Element]?, foodData: Food?) throws -> Food?{
+        guard let ingredientHTMLs = ingredientHTMLs else { throw NetworkError.CrawlingError.ingredientError }
+        var foodData = foodData
         
         for ingredientHTML in ingredientHTMLs {
             let ingredientDatum = try ingredientHTML.select("ul")
@@ -112,10 +142,12 @@ final class NetworkManager: NetworkType {
                 }
             }
         }
+        return foodData
     }
     
-    private func makeCookingOrders(for recipe: [Element]?) throws {
-        guard let recipes = self.recipes else { return }
+    private func makeCookingOrders(for recipes: inout [Element]?, foodData: Food?) throws -> Food? {
+        guard let recipes = recipes else { throw NetworkError.CrawlingError.recipeError }
+        var foodData = foodData
         var temp = [String]()
         
         for recipe in recipes {
@@ -129,18 +161,6 @@ final class NetworkManager: NetworkType {
             }
         }
         foodData?.cookingOrders = temp
-    }
-
-    private func statusError(_ statusCode: Int) -> NetworkError {
-        switch statusCode {
-        case 300..<399:
-            return NetworkError.redirectionError
-        case 400..<499: 
-            return NetworkError.clientError
-        case 500..<599: 
-            return NetworkError.serverError
-        default: 
-            return NetworkError.unknownError
-        }
+        return foodData
     }
 }

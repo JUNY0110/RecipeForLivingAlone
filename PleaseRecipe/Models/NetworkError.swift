@@ -31,4 +31,37 @@ enum NetworkError: Error, CustomDebugStringConvertible {
         case .unknownError: "알수없는 오류"
         }
     }
+
+    static func statusError(_ statusCode: Int) -> NetworkError {
+        switch statusCode {
+        case 300..<399:
+            return .redirectionError
+        case 400..<499:
+            return .clientError
+        case 500..<599:
+            return .serverError
+        default:
+            return .unknownError
+        }
+    }
+}
+
+// MARK: - Nested Types
+
+extension NetworkError {
+    enum CrawlingError: Error, CustomDebugStringConvertible {
+        case foodDataError
+        case foodNameError
+        case ingredientError
+        case recipeError
+        
+        var debugDescription: String {
+            switch self {
+            case .foodDataError: "음식데이터 에러"
+            case .foodNameError: "음식이름 에러"
+            case .ingredientError: "재료명 에러"
+            case .recipeError: "레시피 에러"
+            }
+        }
+    }
 }
