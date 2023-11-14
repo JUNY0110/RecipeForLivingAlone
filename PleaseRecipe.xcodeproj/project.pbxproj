@@ -120,13 +120,14 @@
 			path = Constants;
 			sourceTree = "<group>";
 		};
-		9810ABD72AD4F69A00EDF66E /* APIServices */ = {
+		9810ABD72AD4F69A00EDF66E /* Services */ = {
 			isa = PBXGroup;
 			children = (
 				9810ABCD2AD4E9B700EDF66E /* APIEnvironment.swift */,
+				98CBD7392AFFAB3D008F0102 /* ImageCacheManager.swift */,
 				98A5001E2AD2A2DE0022AEC0 /* NetworkManager.swift */,
 			);
-			path = APIServices;
+			path = Services;
 			sourceTree = "<group>";
 		};
 		987A94CE2ADA4DA700F163E1 /* Resources */ = {
@@ -172,8 +173,7 @@
 				98A5000E2AD286AB0022AEC0 /* FoodName.swift */,
 				987A94D32ADA523600F163E1 /* FoodListModel.swift */,
 				98D3101D2AE53290004A0D8D /* NetworkError.swift */,
-				98CBD7392AFFAB3D008F0102 /* ImageCacheManager.swift */,
-				9810ABD72AD4F69A00EDF66E /* APIServices */,
+				9810ABD72AD4F69A00EDF66E /* Services */,
 			);
 			path = Models;
 			sourceTree = "<group>";
